@@ -10,6 +10,7 @@ Along with a development server, securized networking access are provided.
 | Name | Version |
 |------|---------|
 | terraform | ~> 1.1.2 |
+| google | ~> 4.5.0 |
 
 ## Modules
 
@@ -17,11 +18,17 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [google_compute_network.network](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network) | resource |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| core | Core unit of the workstation environment | ```object({ network = object({ name = string base_cidr_block = string }) })``` | n/a |
+| project\_id | ID of the project. | `string` | n/a |
+| region | Geographical *region* for Google Cloud Platform. | `string` | n/a |
 
 ## Outputs
 
