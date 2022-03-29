@@ -28,5 +28,5 @@ jobs:
           TF_INPUT: 0
           #TF_LOG: "debug"
           ENV: "test"
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
         run: terraform init -reconfigure -no-color -backend-config="bucket=master-bucket-0hw3q17w6a1y30jo" -backend-config="prefix=terraform/state"
