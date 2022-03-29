@@ -3,6 +3,8 @@ on: [push]
 jobs:
   lint:
     runs-on: ubuntu-20.04
+    outputs:
+      exitcode: ${{ steps.format.outputs.exitcode }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -15,4 +17,8 @@ jobs:
           terraform_version: 1.1.2
           # Whether or not to install a wrapper to wrap subsequent calls of the `terraform` binary and expose its STDOUT, STDERR, and exit code as outputs named `stdout`, `stderr`, and `exitcode` respectively. Defaults to `true`.
           terraform_wrapper: true # optional, default is true
-      - run: terraform version
+      - name: Version of Terraform    
+        run: terraform version
+      - name: Check format of Terrraform files
+        id: format
+        run: terraform fmt -check -list=false
