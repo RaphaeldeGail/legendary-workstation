@@ -31,3 +31,12 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           BACKEND_BUCKET: ${{ secrets.BACKEND_BUCKET }}
         run: terraform init -reconfigure -no-color -backend-config="bucket=$BACKEND_BUCKET" -backend-config="prefix=terraform/state"
+  docs:
+    runs-on: ubuntu-20.04
+    container:
+      image: cytopia/terraform-docs:0.9.1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Check Terraform docs
+        run: terraform-docs --output-check .
