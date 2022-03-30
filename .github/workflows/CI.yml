@@ -34,7 +34,7 @@ jobs:
   docs:
     runs-on: ubuntu-20.04
     container:
-      image: cytopia/terraform-docs:0.9.1
+      image: cytopia/terraform-docs:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
