@@ -39,4 +39,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Check Terraform docs
-        run: --output-check .
+        run: terraform-docs --output-check .
