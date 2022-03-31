@@ -34,9 +34,9 @@ jobs:
   docs:
     runs-on: ubuntu-20.04
     container:
-      image: cytopia/terraform-docs:latest
+      image: raphaeldegail/terraform-docs:0.16.0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Check Terraform docs
-        run: terraform-docs --output-check .
+        run: --output-check .
