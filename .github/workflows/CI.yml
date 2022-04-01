@@ -37,7 +37,7 @@ jobs:
       - name: Check Terraform docs
         id: docs
         run: terraform-docs --output-check .
-  initiate:
+  main:
     runs-on: ubuntu-20.04
     needs: [lint, docs]
     if: needs.lint.outputs.exitcode == 0
@@ -62,3 +62,27 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           BACKEND_BUCKET: ${{ secrets.BACKEND_BUCKET }}
         run: terraform init -reconfigure -no-color -backend-config="bucket=$BACKEND_BUCKET"
+      - name: Validate Terraform script
+        env:
+          TF_IN_AUTOMATION: "true"
+          TF_INPUT: 0
+          #TF_LOG: "debug"
+          ENV: "test"
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}   
+          run: terraform validate -no-color
+      - name: Plan infrastructure update
+        env:
+          TF_IN_AUTOMATION: "true"
+          TF_INPUT: 0
+          #TF_LOG: "debug"
+          ENV: "test"
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}   
+          run: terraform plan -no-color -var-file=./environments/$ENV.tfvars -out plan.out
+      - name: Apply infrastructure update
+        env:
+          TF_IN_AUTOMATION: "true"
+          TF_INPUT: 0
+          #TF_LOG: "debug"
+          ENV: "test"
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}   
+          run: terraform apply -no-color plan.out
