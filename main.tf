@@ -33,9 +33,9 @@ resource "google_compute_network" "network" {
 }
 
 resource "google_compute_subnetwork" "subnetwork" {
-  name          = join("-", ["workspace", var.core.network.name])
-  description   = "${title("workspace")} subnet in ${title(var.name)} network"
-  network       = google_compute_network.network.id
+  name        = join("-", ["workspace", var.core.network.name])
+  description = "${title("workspace")} subnet in ${title(var.name)} network"
+  network     = google_compute_network.network.id
 
   ip_cidr_range = cidrsubnet(var.core.network.base_cidr_block, 2, 0)
 }
