@@ -48,7 +48,7 @@ resource "google_compute_route" "default_route" {
   dest_range       = "0.0.0.0/0"
   next_hop_gateway = "default-internet-gateway"
   priority         = 1000
-  tags             = "workspace"
+  tags             = ["workspace"]
 }
 
 resource "google_compute_router" "nat_router" {
