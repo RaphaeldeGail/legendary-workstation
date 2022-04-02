@@ -25,7 +25,7 @@ fi
 echo '*OK (Terraform Documentation)'
 
 echo '*Terraform Init'
-if ! terraform init -reconfigure -no-color -backend-config="bucket=master-bucket-0hw3q17w6a1y30jo" -backend-config="prefix=terraform/state"; then
+if ! terraform init -reconfigure -no-color -backend-config="bucket=master-bucket-0hw3q17w6a1y30jo"; then
     exit 1
 fi
 echo '*OK (Terraform Init)'

@@ -3,7 +3,7 @@ export TF_IN_AUTOMATION="true"
 export TF_INPUT=0
 #export TF_LOG="debug"
 
-export ENV="lab"
+export ENV="test"
 
 echo "*start: $(date)"
 
@@ -14,7 +14,7 @@ fi
 echo '*OK (Terraform Validate)'
 
 echo '*Terraform Plan'
-if ! terraform plan -destroy -no-color -var-file=$ENV.tfvars -out plan.out; then
+if ! terraform plan -destroy -no-color -var-file=./environments/$ENV.tfvars -out plan.out; then
     exit 1
 fi
 echo '*OK (Terraform Plan)'

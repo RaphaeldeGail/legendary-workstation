@@ -14,7 +14,9 @@ Along with a development server, securized networking access are provided.
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| ssh\_service | ./modules/service | n/a |
 
 ## Resources
 
@@ -36,5 +38,7 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| network | Main network characteristics |
 <!-- END_TF_DOCS -->
