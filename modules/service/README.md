@@ -17,7 +17,7 @@ No resources.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| base\_network | Base network characteristics | ```{ name = string base_cidr_block = string id = string }``` | n/a |
+| base\_network | Base network characteristics | ```object({ name = string base_cidr_block = string id = string })``` | n/a |
 
 ## Outputs
 
