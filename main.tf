@@ -67,6 +67,8 @@ resource "google_compute_router_nat" "nat_gateway" {
 module "ssh_service" {
   source = "./modules/service"
 
+  name           = "ssh"
+  destination_ip = "86.70.78.151/32"
   base_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
