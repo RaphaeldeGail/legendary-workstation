@@ -68,7 +68,9 @@ module "ssh_service" {
   source = "./modules/service"
 
   name           = "ssh"
+  full_version   = "1.0.0" 
   destination_ip = "86.70.78.151/32"
+  port           = 22
   base_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
