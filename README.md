@@ -10,20 +10,35 @@ Along with a development server, securized networking access are provided.
 | Name | Version |
 |------|---------|
 | terraform | ~> 1.1.2 |
+| google | ~> 4.5.0 |
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| ssh\_service | ./modules/service | n/a |
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [google_compute_network.network](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network) | resource |
+| [google_compute_route.default_route](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_route) | resource |
+| [google_compute_router.nat_router](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router) | resource |
+| [google_compute_router_nat.nat_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_nat) | resource |
+| [google_compute_subnetwork.subnetwork](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| core | Core unit of the workstation environment | ```object({ network = object({ name = string base_cidr_block = string }) })``` | n/a |
+| project\_id | ID of the project. | `string` | n/a |
+| region | Geographical *region* for Google Cloud Platform. | `string` | n/a |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| network | Main network characteristics |
 <!-- END_TF_DOCS -->

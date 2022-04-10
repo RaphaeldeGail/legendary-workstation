@@ -1,0 +1,88 @@
+name: CI
+on:
+  push:
+    branches:
+      - 'feature/**'
+jobs:
+  lint:
+    runs-on: ubuntu-20.04
+    outputs:
+      exitcode: ${{ steps.format.outputs.exitcode }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: HashiCorp - Setup Terraform
+        # You may pin to the exact commit or the version.
+        # uses: hashicorp/setup-terraform@d22444889af304a44b997011fbabb81ff705a7b4
+        uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          # The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with "<" (for example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.
+          terraform_version: 1.1.2
+          # Whether or not to install a wrapper to wrap subsequent calls of the `terraform` binary and expose its STDOUT, STDERR, and exit code as outputs named `stdout`, `stderr`, and `exitcode` respectively. Defaults to `true`.
+          terraform_wrapper: true # optional, default is true
+      - name: Version of Terraform    
+        run: terraform version
+      - name: Check format of Terrraform files
+        id: format
+        run: terraform fmt -check -list=false
+  docs:
+    runs-on: ubuntu-20.04
+    container:
+      image: raphaeldegail/terraform-docs:0.16.0
+    outputs:
+      exitcode: ${{ steps.docs.outputs.exitcode }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Check Terraform docs
+        id: docs
+        run: terraform-docs --output-check .
+  main:
+    runs-on: ubuntu-20.04
+    needs: [lint, docs]
+    if: needs.lint.outputs.exitcode == 0 && needs.docs.outputs.exitcode == 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: HashiCorp - Setup Terraform
+        # You may pin to the exact commit or the version.
+        # uses: hashicorp/setup-terraform@d22444889af304a44b997011fbabb81ff705a7b4
+        uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          # The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with "<" (for example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.
+          terraform_version: 1.1.2
+          # Whether or not to install a wrapper to wrap subsequent calls of the `terraform` binary and expose its STDOUT, STDERR, and exit code as outputs named `stdout`, `stderr`, and `exitcode` respectively. Defaults to `true`.
+          terraform_wrapper: true # optional, default is true
+      - name: Initialize Terraform working directory
+        env:
+          TF_IN_AUTOMATION: "true"
+          TF_INPUT: 0
+          #TF_LOG: "debug"
+          ENV: "test"
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          BACKEND_BUCKET: ${{ secrets.BACKEND_BUCKET }}
+        run: terraform init -reconfigure -no-color -backend-config="bucket=$BACKEND_BUCKET"
+      - name: Validate Terraform script
+        env:
+          TF_IN_AUTOMATION: "true"
+          TF_INPUT: 0
+          #TF_LOG: "debug"
+          ENV: "test"
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}   
+        run: terraform validate -no-color
+      - name: Plan infrastructure update
+        env:
+          TF_IN_AUTOMATION: "true"
+          TF_INPUT: 0
+          #TF_LOG: "debug"
+          ENV: "test"
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}   
+        run: terraform plan -no-color -var-file=./environments/$ENV.tfvars -out plan.out
+      - name: Apply infrastructure update
+        env:
+          TF_IN_AUTOMATION: "true"
+          TF_INPUT: 0
+          #TF_LOG: "debug"
+          ENV: "test"
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}   
+        run: terraform apply -no-color plan.out
