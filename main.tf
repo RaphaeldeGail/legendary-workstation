@@ -71,15 +71,15 @@ module "ssh_service" {
   full_version   = "1.0.0"
   destination_ip = "86.70.78.151/32"
   port           = 22
-  base_network = {
+
+  back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
     id              = google_compute_network.network.id
   }
-
   metadata = {
-    user-data      = trimspace(templatefile("./modules/service/cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub, dsa_private = var.dsa_key, dsa_public = var.dsa_pub }))
+    user-data      = trimspace(templatefile("./cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub }))
     ssh-keys       = trimspace(var.ssh_pub)
-    startup-script = trimspace(templatefile("./modules/service/startup-script.tpl", { local_ip = "86.70.78.151/32" }))
+    startup-script = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
   }
 }

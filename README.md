@@ -33,8 +33,6 @@ Along with a development server, securized networking access are provided.
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | core | Core unit of the workstation environment | ```object({ network = object({ name = string base_cidr_block = string }) })``` | n/a |
-| dsa\_key | DSA private key for SSH server. Confidential, should only be set by environment variable *TF\_VAR\_dsa\_key* | `string` | n/a |
-| dsa\_pub | DSA public key for SSH server. Confidential, should only be set by environment variable *TF\_VAR\_dsa\_pub* | `string` | n/a |
 | project\_id | ID of the project. | `string` | n/a |
 | region | Geographical *region* for Google Cloud Platform. | `string` | n/a |
 | rsa\_key | RSA private key for SSH server. Confidential, should only be set by environment variable *TF\_VAR\_rsa\_key* | `string` | n/a |

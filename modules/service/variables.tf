@@ -18,13 +18,13 @@ variable "port" {
     description = "Port number for service"
 }
 
-variable "base_network" {
+variable "back_network" {
     type = object({
         name = string
         base_cidr_block = string
         id = string
     })
-    description = "Base network characteristics"
+    description = "Back network characteristics"
 }
 
 variable "metadata" {
