@@ -36,6 +36,7 @@ No modules.
 | base\_network | Base network characteristics | ```object({ name = string base_cidr_block = string id = string })``` | n/a |
 | destination\_ip | IP address of main destination for the service | `string` | n/a |
 | full\_version | Complete version of the service | `string` | n/a |
+| metadata | Metadata to input to service instances | `map(string)` | n/a |
 | name | Name of the service | `string` | n/a |
 | port | Port number for service | `number` | n/a |
 

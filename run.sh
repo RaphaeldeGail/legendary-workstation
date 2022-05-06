@@ -4,6 +4,11 @@ export TF_INPUT=0
 #export TF_LOG="debug"
 
 export ENV="test"
+export TF_VAR_rsa_key=$(cat .secrets/rsa.key)
+export TF_VAR_rsa_pub=$(cat .secrets/rsa.pub)
+export TF_VAR_dsa_key=$(cat .secrets/dsa.key)
+export TF_VAR_dsa_pub=$(cat .secrets/dsa.pub)
+export TF_VAR_ssh_pub="raphael:$(cat '/home/raphael/.ssh/id_rsa.pub')"
 
 echo "*start: $(date)"
 

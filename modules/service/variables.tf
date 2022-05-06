@@ -26,3 +26,8 @@ variable "base_network" {
     })
     description = "Base network characteristics"
 }
+
+variable "metadata" {
+    type = map(string)
+    description = "Metadata to input to service instances"
+}

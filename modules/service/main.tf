@@ -124,11 +124,8 @@ resource "google_compute_instance_template" "main" {
     subnetwork = google_compute_subnetwork.base_subnetwork.id
   }
 
-  metadata = {
-    user-data      = trimspace(templatefile("./modules/service/cloud-config.tpl", { rsa_private = file(".secrets/rsa.key"), rsa_public = file(".secrets/rsa.pub"), dsa_private = file(".secrets/dsa.key"), dsa_public = file(".secrets/dsa.pub") }))
-    ssh-keys       = join(":", ["raphael", trimspace(file("/home/raphael/.ssh/id_rsa.pub"))])
-    startup-script = trimspace(templatefile("./modules/service/startup-script.tpl", { local_ip = var.destination_ip }))
-  }
+  metadata = var.metadata
+
   lifecycle {
     create_before_destroy = true
   }
