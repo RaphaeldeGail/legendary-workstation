@@ -4,11 +4,9 @@
 
 locals {
     host_network = [var.name, "host", "network"]
+    host_subnetwork = ["main","subnet"]
+    base_subnetwork = [var.name, "subnet"]
     route = ["route", "to", "destination", "ip"]
-}
-
-data "google_netblock_ip_ranges" "legacy-hcs" {
-  range_type = "legacy-health-checkers"
 }
 
 resource "google_compute_network" "host_network" {
@@ -20,8 +18,8 @@ resource "google_compute_network" "host_network" {
 }
 
 resource "google_compute_subnetwork" "host_subnetwork" {
-  name          = join("-", ["main","subnet"])
-  description   = title(join(" ", concat(["main", "subnet", "in"], local.host_network)))
+  name          = join("-", local.host_subnetwork)
+  description   = title(join(" ", concat(local.host_subnetwork, ["in"], local.host_network)))
   network       = google_compute_network.host_network.id
 
   ip_cidr_range = cidrsubnet("172.16.0.0/12", 10, 0)
@@ -39,8 +37,8 @@ resource "google_compute_route" "route" {
 }
 
 resource "google_compute_subnetwork" "base_subnetwork" {
-  name          = join("-", [var.name, "subnet"])
-  description   = title("${var.name} subnet in ${var.name} network")
+  name          = join("-", local.base_subnetwork)
+  description   = title(join(" ", concat(local.base_subnetwork, ["in", var.name, "network"])))
   network       = var.base_network.id
 
   ip_cidr_range = cidrsubnet(var.base_network.base_cidr_block, 2, 1)
@@ -78,6 +76,10 @@ resource "google_compute_firewall" "from_base" {
   target_tags = ["workspace"]
 }
 
+data "google_netblock_ip_ranges" "legacy-hcs" {
+  range_type = "legacy-health-checkers"
+}
+
 resource "google_compute_firewall" "healthcheck" {
   name        = "allow-from-healthcheck-to-bounce-tcp-80"
   description = "Allow HTTP connection from Google health checks to bounce servers"
@@ -92,4 +94,107 @@ resource "google_compute_firewall" "healthcheck" {
 
   source_ranges = data.google_netblock_ip_ranges.legacy-hcs.cidr_blocks_ipv4
   target_tags   = [var.name]
+}
+
+resource "google_compute_instance_template" "main" {
+  name        = join("-", [var.name, "template", "v${replace(var.full_version, ".", "-")}"])
+  description = "This template is used for ${var.name} service"
+
+  tags                 = [var.name]
+  instance_description = "${var.name} service"
+  machine_type         = "f1-micro"
+  can_ip_forward       = true
+
+  scheduling {
+    preemptible       = true
+    automatic_restart = false
+  }
+
+  disk {
+    source_image = "custom-ubuntu"
+    disk_size_gb = 20
+    auto_delete  = true
+    boot         = true
+  }
+
+  network_interface {
+    subnetwork = google_compute_subnetwork.host_subnetwork.id
+  }
+  network_interface {
+    subnetwork = google_compute_subnetwork.base_subnetwork.id
+  }
+
+  metadata = {
+    user-data      = trimspace(templatefile("./modules/service/cloud-config.tpl", { rsa_private = file(".secrets/rsa.key"), rsa_public = file(".secrets/rsa.pub"), dsa_private = file(".secrets/dsa.key"), dsa_public = file(".secrets/dsa.pub") }))
+    ssh-keys       = join(":", ["raphael", trimspace(file("/home/raphael/.ssh/id_rsa.pub"))])
+    startup-script = trimspace(templatefile("./modules/service/startup-script.tpl", { local_ip = var.destination_ip }))
+  }
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+data "google_compute_zones" "available" {
+}
+
+resource "google_compute_instance_group_manager" "main" {
+  count = min(length(data.google_compute_zones.available.names), 2)
+
+  name               = join("-", [var.name, "group-manager", count.index])
+  description        = "Group manager for ${var.name} - zone ${data.google_compute_zones.available.names[count.index]} (${count.index})"
+  base_instance_name = join("-", [var.name, count.index])
+  zone               = data.google_compute_zones.available.names[count.index]
+
+  version {
+    instance_template = google_compute_instance_template.main.id
+  }
+
+  target_pools = [count.index == 0 ? google_compute_target_pool.default.id : google_compute_target_pool.main.id]
+  target_size  = 1
+}
+
+resource "google_compute_http_health_check" "default" {
+  name               = "default"
+  port               = 80
+  request_path       = "/"
+  check_interval_sec = 1
+  timeout_sec        = 1
+}
+
+resource "google_compute_target_pool" "default" {
+  name        = join("-", [var.name, "pool", "failover"])
+  description = "Pool of servers for ${var.name}"
+
+  instances        = null
+  session_affinity = "CLIENT_IP"
+
+  health_checks = [
+    google_compute_http_health_check.default.name,
+  ]
+}
+
+resource "google_compute_target_pool" "main" {
+  name        = join("-", [var.name, "pool", "main"])
+  description = "Pool of servers for ${var.name}"
+
+  instances        = null
+  session_affinity = "CLIENT_IP"
+
+  health_checks = [
+    google_compute_http_health_check.default.name,
+  ]
+
+  backup_pool    = google_compute_target_pool.default.self_link
+  failover_ratio = 0.5
+}
+
+resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
+  count = min(length(data.google_compute_zones.available.names), 1)
+
+  name                  = join("-", [var.name, "frontend"])
+  ip_protocol           = "TCP"
+  load_balancing_scheme = "EXTERNAL"
+  port_range            = "22"
+  target                = google_compute_target_pool.main.id
+  network_tier          = "PREMIUM"
 }
