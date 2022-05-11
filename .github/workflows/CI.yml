@@ -76,13 +76,15 @@ jobs:
           TF_INPUT: 0
           #TF_LOG: "debug"
           ENV: "test"
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}   
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          TF_VAR_rsa_key: ${{ secrets.TF_VAR_rsa_key }}
+          TF_VAR_rsa_pub: ${{ secrets.TF_VAR_rsa_pub }}
+          TF_VAR_ssh_pub: ${{ secrets.TF_VAR_ssh_pub }}
         run: terraform plan -no-color -var-file=./environments/$ENV.tfvars -out plan.out
       - name: Apply infrastructure update
         env:
           TF_IN_AUTOMATION: "true"
           TF_INPUT: 0
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} 
           #TF_LOG: "debug"
-          ENV: "test"
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}   
         run: terraform apply -no-color plan.out

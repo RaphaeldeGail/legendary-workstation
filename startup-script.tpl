@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Fetch information from metadata server
+IP=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/1/ip" -H "Metadata-Flavor: Google")
+GW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/1/gateway" -H "Metadata-Flavor: Google")
+echo $IP
+echo $GW
+
+# Add a table with routes bound to second interface
+echo "1 rt1" | tee -a /etc/iproute2/rt_tables
+ip route add "$GW" src "$IP" dev ens5 table rt1
+ip route add default via "$GW" dev ens5 table rt1
+
+# Define some policies to route traffic to correct interface
+## Dedicated rule for connection to local network
+ip rule add from ${local_ip} priority 10 table main
+ip rule add to ${local_ip} priority 11 table main
+## Rule for health checks and metadata server
+ip rule add from 35.191.0.0/16 priority 100 table main
+ip rule add to 35.191.0.0/16 priority 101 table main
+ip rule add from 209.85.152.0/22 priority 102 table main
+ip rule add to 209.85.152.0/22 priority 103 table main
+ip rule add from 209.85.204.0/22 priority 104 table main
+ip rule add to 209.85.204.0/22 priority 105 table main
+ip rule add from 169.254.169.254/32 priority 106 table main
+ip rule add to 169.254.169.254/32 priority 107 table main
+## General rule to rely on second interface based on interface subnetwork IP address
+ip rule add from "$IP"/32 priority 1000 table rt1
+ip rule add to "$IP"/32 priority 1001 table rt1
+## Default rule for traffic to rely on table rt1 (superseeds other default rule with lower priority)
+ip rule add from all priority 32000 table rt1
+
+# Install Nginx server for http check
+apt-get update
+apt-get install -y nginx

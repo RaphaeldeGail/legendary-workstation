@@ -16,6 +16,7 @@ Along with a development server, securized networking access are provided.
 
 | Name | Source | Version |
 |------|--------|---------|
+| http\_service | ./modules/service | n/a |
 | ssh\_service | ./modules/service | n/a |
 
 ## Resources
@@ -35,6 +36,9 @@ Along with a development server, securized networking access are provided.
 | core | Core unit of the workstation environment | ```object({ network = object({ name = string base_cidr_block = string }) })``` | n/a |
 | project\_id | ID of the project. | `string` | n/a |
 | region | Geographical *region* for Google Cloud Platform. | `string` | n/a |
+| rsa\_key | RSA private key for SSH server. Confidential, should only be set by environment variable *TF\_VAR\_rsa\_key* | `string` | n/a |
+| rsa\_pub | RSA public key for SSH server. Confidential, should only be set by environment variable *TF\_VAR\_rsa\_pub* | `string` | n/a |
+| ssh\_pub | User public key for SSH authentication. Confidential, should only be set by environment variable *TF\_VAR\_ssh\_pub* | `string` | n/a |
 
 ## Outputs
 
