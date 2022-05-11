@@ -85,5 +85,6 @@ jobs:
         env:
           TF_IN_AUTOMATION: "true"
           TF_INPUT: 0
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} 
           #TF_LOG: "debug"
         run: terraform apply -no-color plan.out
