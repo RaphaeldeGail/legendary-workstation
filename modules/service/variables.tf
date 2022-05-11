@@ -31,3 +31,8 @@ variable "metadata" {
     type = map(string)
     description = "Metadata to input to service instances"
 }
+
+variable "index" {
+    type = number
+    description = "The index of the service, as a number, among the services list"
+}

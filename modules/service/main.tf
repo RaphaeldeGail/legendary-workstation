@@ -4,9 +4,9 @@
 
 locals {
     front_network = [var.name, "front", "network"]
-    front_subnetwork = ["main","subnet"]
+    front_subnetwork = [var.name, "main","subnet"]
     back_subnetwork = [var.name, "back", "subnet"]
-    route = ["route", "to", "destination", "ip"]
+    route = [var.name, "route", "to", "destination", "ip"]
     front_firewall = ["allow", "from", "destination", "to", var.name, "tcp", tostring(var.port)]
     back_firewall = ["allow", "from", var.name, "to", "workspace", "tcp", tostring(var.port)]
     healthcheck_firewall = ["allow", "from", "healthchecks", "to", var.name, "tcp", tostring(80)]
@@ -45,7 +45,7 @@ resource "google_compute_subnetwork" "back_subnetwork" {
   description   = title(join(" ", concat(local.back_subnetwork, ["in", var.name, "network"])))
   network       = var.back_network.id
 
-  ip_cidr_range = cidrsubnet(var.back_network.base_cidr_block, 2, 1)
+  ip_cidr_range = cidrsubnet(var.back_network.base_cidr_block, 2, var.index)
 }
 
 resource "google_compute_firewall" "to_front" {
@@ -155,7 +155,7 @@ resource "google_compute_instance_group_manager" "main" {
 }
 
 resource "google_compute_http_health_check" "default" {
-  name               = "default-healthcheck"
+  name               = join("-", [var.name, "default-healthcheck"])
   port               = 80
   request_path       = "/"
   check_interval_sec = 1
@@ -195,7 +195,7 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   name                  = join("-", [var.name, "frontend", "loadbalancer"])
   ip_protocol           = "TCP"
   load_balancing_scheme = "EXTERNAL"
-  port_range            = "22"
+  port_range            = tostring(var.port)
   target                = google_compute_target_pool.main.id
   network_tier          = "PREMIUM"
 }

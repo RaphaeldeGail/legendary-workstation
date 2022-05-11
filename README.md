@@ -16,6 +16,7 @@ Along with a development server, securized networking access are provided.
 
 | Name | Source | Version |
 |------|--------|---------|
+| http\_service | ./modules/service | n/a |
 | ssh\_service | ./modules/service | n/a |
 
 ## Resources

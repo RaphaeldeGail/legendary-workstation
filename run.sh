@@ -6,7 +6,7 @@ export TF_INPUT=0
 export ENV="test"
 export TF_VAR_rsa_key=$(cat .secrets/rsa.key)
 export TF_VAR_rsa_pub=$(cat .secrets/rsa.pub)
-export TF_VAR_ssh_pub="raphael:$(cat '/home/raphael/.ssh/id_rsa.pub')"
+export TF_VAR_ssh_pub=$(cat '/home/raphael/.ssh/id_rsa.pub')
 
 echo "*start: $(date)"
 

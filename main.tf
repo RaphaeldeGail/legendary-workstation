@@ -72,14 +72,38 @@ module "ssh_service" {
   destination_ip = "86.70.78.151/32"
   port           = 22
 
+  index = 1
+
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data      = trimspace(templatefile("./cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub }))
-    ssh-keys       = trimspace(var.ssh_pub)
-    startup-script = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
+    user-data              = trimspace(templatefile("./cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub, ssh_public = var.ssh_pub }))
+    startup-script         = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
+    block-project-ssh-keys = true
+  }
+}
+
+module "http_service" {
+  source = "./modules/service"
+
+  name           = "http"
+  full_version   = "1.0.0"
+  destination_ip = "86.70.78.151/32"
+  port           = 443
+
+  index = 2
+
+  back_network = {
+    name            = var.core.network.name
+    base_cidr_block = var.core.network.base_cidr_block
+    id              = google_compute_network.network.id
+  }
+  metadata = {
+    user-data              = trimspace(templatefile("./cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub, ssh_public = var.ssh_pub }))
+    startup-script         = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
+    block-project-ssh-keys = true
   }
 }
