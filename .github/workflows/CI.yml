@@ -61,6 +61,9 @@ jobs:
           ENV: "test"
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           BACKEND_BUCKET: ${{ secrets.BACKEND_BUCKET }}
+          TF_VAR_rsa_key: ${{ secrets.TF_VAR_rsa_key }}
+          TF_VAR_rsa_pub: ${{ secrets.TF_VAR_rsa_pub }}
+          TF_VAR_ssh_pub: ${{ secrets.TF_VAR_ssh_pub }}
         run: terraform init -reconfigure -no-color -backend-config="bucket=$BACKEND_BUCKET"
       - name: Validate Terraform script
         env:
