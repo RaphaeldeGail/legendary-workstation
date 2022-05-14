@@ -107,3 +107,51 @@ module "http_service" {
     block-project-ssh-keys = true
   }
 }
+
+resource "google_compute_disk" "data_disk" {
+  name                      = "data-disk"
+  description               = "Data Disk"
+  size                      = 10
+  type                      = "pd-standard"
+  physical_block_size_bytes = 4096
+  zone                      = "europe-west1-b"
+}
+
+resource "google_compute_instance" "workstation" {
+  name        = "workstation"
+  description = title("Workstation instance")
+  zone        = "europe-west1-b"
+
+  tags           = ["workspace"]
+  machine_type   = "e2-small"
+  can_ip_forward = false
+
+  scheduling {
+    preemptible       = true
+    automatic_restart = false
+  }
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-2004-lts"
+      size  = 10
+    }
+    auto_delete = true
+  }
+
+  attached_disk {
+    source      = google_compute_disk.data_disk.id
+    device_name = "data-disk"
+    mode        = "READ_WRITE"
+  }
+
+  network_interface {
+    subnetwork = google_compute_subnetwork.subnetwork.id
+  }
+
+  metadata = {
+    block-project-ssh-keys = true
+    ssh-keys               = join(":", ["raphael", trimspace(var.ssh_pub)])
+  }
+
+}
