@@ -117,6 +117,46 @@ resource "google_compute_disk" "data_disk" {
   zone                      = "europe-west1-b"
 }
 
+resource "google_compute_resource_policy" "backup_policy" {
+  name   = join("-", ["backup", "policy"])
+  region = var.region
+  snapshot_schedule_policy {
+    schedule {
+      daily_schedule {
+        days_in_cycle = 1
+        start_time    = "15:00"
+      }
+    }
+  }
+}
+
+resource "google_compute_disk_resource_policy_attachment" "backup_policy_attachment" {
+  name = google_compute_resource_policy.backup_policy.name
+  disk = google_compute_disk.data_disk.name
+  zone = "europe-west1-b"
+}
+
+resource "google_service_account" "bucket_service_account" {
+  account_id   = "bucket-account"
+  description  = "Bucket Account"
+  display_name = "Bucket Account"
+}
+
+resource "google_storage_bucket" "shared_bucket" {
+  name          = "shared-bucket-1605"
+  location      = "EU"
+  force_destroy = true
+  storage_class = "STANDARD"
+
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket_iam_member" "shared_bucket_member" {
+  bucket = google_storage_bucket.shared_bucket.name
+  role   = "roles/storage.objectAdmin"
+  member = join(":", ["serviceAccount", google_service_account.bucket_service_account.email])
+}
+
 resource "google_compute_instance" "workstation" {
   name        = "workstation"
   description = title("Workstation instance")
