@@ -190,6 +190,7 @@ resource "google_compute_instance" "workstation" {
   }
 
   metadata = {
+    startup-script         = "mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb; mkdir -p /mnt/disks/diskb; mount -o discard,defaults /dev/sdb /mnt/disks/diskb; chmod a+w /mnt/disks/diskb; echo '/dev/sdb /mnt/disks/diskb ext4 discard,defaults,rw 0 2' >> /etc/fstab"
     block-project-ssh-keys = true
     ssh-keys               = join(":", ["raphael", trimspace(var.ssh_pub)])
   }
