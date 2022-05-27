@@ -107,3 +107,92 @@ module "http_service" {
     block-project-ssh-keys = true
   }
 }
+
+resource "google_compute_disk" "data_disk" {
+  name                      = "data-disk"
+  description               = "Data Disk"
+  size                      = 10
+  type                      = "pd-standard"
+  physical_block_size_bytes = 4096
+  zone                      = "europe-west1-b"
+}
+
+resource "google_compute_resource_policy" "backup_policy" {
+  name   = join("-", ["backup", "policy"])
+  region = var.region
+  snapshot_schedule_policy {
+    schedule {
+      daily_schedule {
+        days_in_cycle = 1
+        start_time    = "15:00"
+      }
+    }
+  }
+}
+
+resource "google_compute_disk_resource_policy_attachment" "backup_policy_attachment" {
+  name = google_compute_resource_policy.backup_policy.name
+  disk = google_compute_disk.data_disk.name
+  zone = "europe-west1-b"
+}
+
+resource "google_service_account" "bucket_service_account" {
+  account_id   = "bucket-account"
+  description  = "Bucket Account"
+  display_name = "Bucket Account"
+}
+
+resource "google_storage_bucket" "shared_bucket" {
+  name          = "shared-bucket-1605"
+  location      = "EU"
+  force_destroy = true
+  storage_class = "STANDARD"
+
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket_iam_member" "shared_bucket_member" {
+  bucket = google_storage_bucket.shared_bucket.name
+  role   = "roles/storage.objectAdmin"
+  member = join(":", ["serviceAccount", google_service_account.bucket_service_account.email])
+}
+
+resource "google_compute_instance" "workstation" {
+  name        = "workstation"
+  description = title("Workstation instance")
+  zone        = "europe-west1-b"
+
+  tags           = ["workspace"]
+  machine_type   = "e2-small"
+  can_ip_forward = false
+
+  scheduling {
+    preemptible       = true
+    automatic_restart = false
+  }
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-2004-lts"
+      size  = 10
+    }
+    auto_delete = true
+  }
+
+  attached_disk {
+    source      = google_compute_disk.data_disk.id
+    device_name = "data-disk"
+    mode        = "READ_WRITE"
+  }
+
+  network_interface {
+    subnetwork = google_compute_subnetwork.subnetwork.id
+  }
+
+  metadata = {
+    startup-script         = "mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb; mkdir -p /mnt/disks/diskb; mount -o discard,defaults /dev/sdb /mnt/disks/diskb; chmod a+w /mnt/disks/diskb; echo '/dev/sdb /mnt/disks/diskb ext4 discard,defaults,rw 0 2' >> /etc/fstab"
+    block-project-ssh-keys = true
+    ssh-keys               = join(":", ["raphael", trimspace(var.ssh_pub)])
+  }
+
+}
