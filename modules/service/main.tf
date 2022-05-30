@@ -115,8 +115,8 @@ resource "google_compute_instance_template" "main" {
   }
 
   disk {
-    source_image = "custom-ubuntu"
-    disk_size_gb = 20
+    source_image = "projects/cos-cloud/global/images/cos-stable-97-16919-29-36"
+    disk_size_gb = 10
     auto_delete  = true
     boot         = true
   }
