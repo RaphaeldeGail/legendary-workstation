@@ -12,7 +12,7 @@ users:
   - name: raphael
     primary_group: raphael
     groups: users
-    no_create_home: true
+    no_create_home: false
     lock_passwd: true
     ssh_authorized_keys:
       - ${trimspace(ssh_public)}
