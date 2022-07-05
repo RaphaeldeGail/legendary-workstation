@@ -15,10 +15,16 @@ source "googlecompute" "custom" {
   ssh_username                    = "worker"
   zone                            = "europe-west1-b"
 
-  image_name   = "envoy-ubuntu"
-  machine_type = "e2-standard-8"
+  image_name        = "envoy-v{{timestamp}}-ubuntu-20"
+  image_description = "Ubuntu 20.04 based VM with envoy, default configuration preinstalled."
+  image_family      = "envoy-ubuntu-20"
+
+  machine_type = "e2-standard-16"
   network      = "hub"
   subnetwork   = "default"
+
+  disk_size = 30
+  disk_type = "pd-ssd"
 }
 
 build {
