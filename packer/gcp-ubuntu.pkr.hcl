@@ -19,11 +19,11 @@ source "googlecompute" "custom" {
   image_description = "Ubuntu 20.04 based VM with envoy, default configuration preinstalled."
   image_family      = "envoy-ubuntu-20"
 
-  machine_type = "e2-standard-16"
+  machine_type = "e2-standard-4"
   network      = "hub"
   subnetwork   = "default"
 
-  disk_size = 30
+  disk_size = 20
   disk_type = "pd-ssd"
 }
 

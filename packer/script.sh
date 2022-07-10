@@ -1,5 +1,10 @@
 #!/bin/bash
 
+while ! sudo fuser /var/lib/dpkg/lock; do
+   echo "waiting for APT process to terminate..."
+   sleep 5
+done
+
 sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet update
 sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet -y install \
    autoconf \
@@ -14,24 +19,21 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet -y install \
    virtualenv \
    ninja-build
 
-# git clone -q https://github.com/ninja-build/ninja.git
-# cd ninja
-# cmake -Bbuild-cmake
-# cmake --build build-cmake
-# sudo mv build-cmake/ninja /usr/local/bin/ninja
-# cd ..
-
-sudo wget -qO /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
+sudo wget -qO /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.12.0/bazelisk-linux-amd64
 sudo chmod +x /usr/local/bin/bazel
 
 sudo curl -s -LO https://go.dev/dl/go1.18.3.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.3.linux-amd64.tar.gz
-echo 'export PATH=$PATH:/usr/local/go/bin' | sudo tee -a /etc/profile
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf go1.18.3.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+go version
 
-/usr/local/go/bin/go install github.com/bazelbuild/buildtools/buildifier@latest
-/usr/local/go/bin/go install github.com/bazelbuild/buildtools/buildozer@latest
+go install github.com/bazelbuild/buildtools/buildifier@5.1.0
+go install github.com/bazelbuild/buildtools/buildozer@5.1.0
 
-git clone -q --branch v1.22.2 https://github.com/envoyproxy/envoy.git
+git clone -q --branch v1.21.0 https://github.com/envoyproxy/envoy.git
 cd envoy
-bazel build --show_result=1 --verbose_failures -c opt envoy
+bazel build envoy
+sudo mv bazel-bin/source/exe/envoy-static /usr/local/bin/envoy
+envoy --version
 cd ..
