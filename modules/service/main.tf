@@ -115,8 +115,8 @@ resource "google_compute_instance_template" "main" {
   }
 
   disk {
-    source_image = "projects/cos-cloud/global/images/cos-stable-97-16919-29-36"
-    disk_size_gb = 10
+    source_image = "projects/lab-v1-0hw3q17w6a1y30jo-a5114/global/images/envoy-v1657447482-ubuntu-20"
+    disk_size_gb = 20
     auto_delete  = true
     boot         = true
   }

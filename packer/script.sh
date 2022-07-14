@@ -1,7 +1,7 @@
 #!/bin/bash
 
 while ! sudo fuser /var/lib/dpkg/lock; do
-   echo "waiting for APT process to terminate..."
+   echo "waiting for external APT process to terminate..."
    sleep 5
 done
 
