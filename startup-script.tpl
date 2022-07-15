@@ -29,7 +29,3 @@ ip rule add from "$IP"/32 priority 1000 table rt1
 ip rule add to "$IP"/32 priority 1001 table rt1
 ## Default rule for traffic to rely on table rt1 (superseeds other default rule with lower priority)
 ip rule add from all priority 32000 table rt1
-
-# Install Nginx server for http check
-apt-get update
-apt-get install -y nginx

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-while ! sudo fuser /var/lib/dpkg/lock; do
+while sudo fuser /var/lib/dpkg/lock; do
    echo "waiting for external APT process to terminate..."
    sleep 5
 done
@@ -17,7 +17,8 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet -y install \
    unzip \
    python3-pip \
    virtualenv \
-   ninja-build
+   ninja-build \
+   nginx
 
 sudo wget -qO /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.12.0/bazelisk-linux-amd64
 sudo chmod +x /usr/local/bin/bazel

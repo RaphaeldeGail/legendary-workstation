@@ -115,7 +115,7 @@ resource "google_compute_instance_template" "main" {
   }
 
   disk {
-    source_image = "projects/lab-v1-0hw3q17w6a1y30jo-a5114/global/images/envoy-v1657447482-ubuntu-20"
+    source_image = "projects/lab-v1-0hw3q17w6a1y30jo-a5114/global/images/envoy-v1657901517-ubuntu-20"
     disk_size_gb = 20
     auto_delete  = true
     boot         = true

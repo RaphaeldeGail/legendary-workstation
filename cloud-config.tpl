@@ -16,8 +16,6 @@ users:
     lock_passwd: true
     ssh_authorized_keys:
       - ${trimspace(ssh_public)}
-  - name: cloudservice
-    uid: 2000
 
 write_files:
   - path: /etc/envoy.yaml
@@ -31,7 +29,7 @@ write_files:
           address:
             socket_address:
               address: 0.0.0.0
-              port_value: 80
+              port_value: 443
           filter_chains:
           - filters:
             - name: envoy.filters.network.http_connection_manager
