@@ -82,7 +82,7 @@ module "ssh_service" {
   metadata = {
     user-data              = trimspace(templatefile("./cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub, ssh_public = var.ssh_pub }))
     startup-script         = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
-    block-project-ssh-keys = true
+    block-project-ssh-keys = false
   }
 }
 
@@ -90,7 +90,7 @@ module "http_service" {
   source = "./modules/service"
 
   name           = "http"
-  full_version   = "1.0.0"
+  full_version   = "1.0.1"
   destination_ip = "86.70.78.151/32"
   port           = 443
 
