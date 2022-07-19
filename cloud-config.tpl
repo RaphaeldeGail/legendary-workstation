@@ -7,6 +7,16 @@ ssh_keys:
         ${indent(8, trimspace(rsa_private))}
     rsa_public: ${trimspace(rsa_public)}
 
+# By default, the fingerprints of the authorized keys for the users
+# cloud-init adds are printed to the console. Setting
+# no_ssh_fingerprints to true suppresses this output.
+no_ssh_fingerprints: false
+
+# By default, (most) ssh host keys are printed to the console. Setting
+# emit_keys_to_console to false suppresses this output.
+ssh:
+  emit_keys_to_console: false
+
 ## Setup users profiles
 users:
   - name: raphael

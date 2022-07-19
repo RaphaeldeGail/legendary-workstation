@@ -108,6 +108,95 @@ module "http_service" {
   }
 }
 
+resource "google_privateca_ca_pool" "default_ca" {
+  name     = join("-", ["wansho", "ca", "pool", "123"])
+  location = var.region
+  tier     = "ENTERPRISE"
+  publishing_options {
+    publish_ca_cert = true
+    publish_crl     = false
+  }
+  issuance_policy {
+    allowed_issuance_modes {
+      allow_csr_based_issuance    = true
+      allow_config_based_issuance = false
+    }
+    identity_constraints {
+      allow_subject_passthrough           = true
+      allow_subject_alt_names_passthrough = true
+    }
+    baseline_values {
+      ca_options {
+        is_ca = true
+      }
+      key_usage {
+        base_key_usage {
+          digital_signature  = true
+          content_commitment = true
+          key_encipherment   = false
+          data_encipherment  = true
+          key_agreement      = true
+          cert_sign          = false
+          crl_sign           = true
+          decipher_only      = true
+        }
+        extended_key_usage {
+          server_auth      = true
+          client_auth      = false
+          email_protection = true
+          code_signing     = true
+          time_stamping    = true
+        }
+      }
+    }
+  }
+}
+
+resource "google_privateca_certificate_authority" "default" {
+  // This example assumes this pool already exists.
+  // Pools cannot be deleted in normal test circumstances, so we depend on static pools
+  pool                     = google_privateca_ca_pool.default_ca.name
+  certificate_authority_id = "wansho-lab-root-ca"
+  location                 = var.region
+  config {
+    subject_config {
+      subject {
+        organization = "Wansho Lab"
+        common_name  = "Wansho Lab Root CA"
+      }
+    }
+    x509_config {
+      ca_options {
+        is_ca                  = true
+        max_issuer_path_length = 10
+      }
+      key_usage {
+        base_key_usage {
+          digital_signature  = true
+          content_commitment = true
+          key_encipherment   = false
+          data_encipherment  = true
+          key_agreement      = true
+          cert_sign          = true
+          crl_sign           = true
+          decipher_only      = true
+        }
+        extended_key_usage {
+          server_auth      = true
+          client_auth      = false
+          email_protection = true
+          code_signing     = true
+          time_stamping    = true
+        }
+      }
+    }
+  }
+  lifetime = "86400s"
+  key_spec {
+    algorithm = "RSA_PKCS1_4096_SHA256"
+  }
+}
+
 resource "google_compute_disk" "data_disk" {
   name                      = "data-disk"
   description               = "Data Disk"
