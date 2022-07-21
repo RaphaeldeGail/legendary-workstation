@@ -4,6 +4,8 @@
 #export TF_LOG="debug"
 
 export ENV="test"
+export PKR_VAR_rsa_key=$(cat ../.secrets/rsa.key)
+export PKR_VAR_rsa_pub=$(cat ../.secrets/rsa.pub)
 
 echo "*start: $(date)"
 

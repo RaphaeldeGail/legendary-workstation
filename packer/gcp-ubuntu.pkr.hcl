@@ -7,6 +7,14 @@ packer {
   }
 }
 
+variable "rsa_key" {
+  type = string
+}
+
+variable "rsa_pub" {
+  type = string
+}
+
 source "googlecompute" "custom" {
   project_id                      = "lab-v1-0hw3q17w6a1y30jo-a5114"
   source_image                    = "ubuntu-2004-focal-v20220118"
@@ -31,6 +39,10 @@ build {
   sources = ["sources.googlecompute.custom"]
 
   provisioner "shell" {
-    script = "./script.sh"
+    environment_vars = [
+      "RSA_PUB=${var.rsa_pub}",
+      "RSA_KEY=${var.rsa_key}"
+    ]
+    script           = "./script.sh"
   }
 }
