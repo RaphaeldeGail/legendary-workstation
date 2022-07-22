@@ -22,17 +22,18 @@ source "googlecompute" "custom" {
   communicator                    = "ssh"
   ssh_username                    = "worker"
   zone                            = "europe-west1-b"
+  //skip_create_image               = true
 
-  image_name        = "envoy-v{{timestamp}}-ubuntu-20"
-  image_description = "Ubuntu 20.04 based VM with envoy, default configuration preinstalled."
-  image_family      = "envoy-ubuntu-20"
+  image_name        = "bounce-v{{timestamp}}-ubuntu-20"
+  image_description = "Ubuntu 20.04 based VM with custom SSH settings for bounce."
+  image_family      = "bounce-ubuntu-20"
 
-  machine_type = "e2-standard-16"
+  machine_type = "e2-micro"
   network      = "hub"
   subnetwork   = "default"
 
-  disk_size = 20
-  disk_type = "pd-ssd"
+  disk_size = 10
+  disk_type = "pd-standard"
 }
 
 build {
@@ -43,6 +44,6 @@ build {
       "RSA_PUB=${var.rsa_pub}",
       "RSA_KEY=${var.rsa_key}"
     ]
-    script           = "./script.sh"
+    script = "./bounce-script.sh"
   }
 }
