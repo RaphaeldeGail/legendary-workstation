@@ -74,13 +74,14 @@ module "ssh_service" {
 
   index = 1
 
+  compute_image = "projects/lab-v1-0hw3q17w6a1y30jo-a5114/global/images/bounce-v1658500063-ubuntu-20"
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data              = trimspace(templatefile("./cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub, ssh_public = var.ssh_pub }))
+    user-data              = trimspace(templatefile("./cloud-config.tpl", { ssh_public = var.ssh_pub }))
     startup-script         = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
     block-project-ssh-keys = false
   }
@@ -96,18 +97,20 @@ module "http_service" {
 
   index = 2
 
+  compute_image = "projects/lab-v1-0hw3q17w6a1y30jo-a5114/global/images/envoy-v1657901517-ubuntu-20"
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data              = trimspace(templatefile("./cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub, ssh_public = var.ssh_pub }))
+    user-data              = trimspace(templatefile("./cloud-config.tpl", { ssh_public = var.ssh_pub }))
     startup-script         = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
     block-project-ssh-keys = true
   }
 }
 
+/*
 resource "google_privateca_ca_pool" "default_ca" {
   name     = join("-", ["wansho", "ca", "pool", "123"])
   location = var.region
@@ -196,6 +199,7 @@ resource "google_privateca_certificate_authority" "default" {
     algorithm = "RSA_PKCS1_4096_SHA256"
   }
 }
+*/
 
 resource "google_compute_disk" "data_disk" {
   name                      = "data-disk"

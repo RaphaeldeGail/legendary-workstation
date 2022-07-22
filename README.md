@@ -32,8 +32,6 @@ Along with a development server, securized networking access are provided.
 | [google_compute_router.nat_router](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router) | resource |
 | [google_compute_router_nat.nat_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_nat) | resource |
 | [google_compute_subnetwork.subnetwork](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
-| [google_privateca_ca_pool.default_ca](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/privateca_ca_pool) | resource |
-| [google_privateca_certificate_authority.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/privateca_certificate_authority) | resource |
 | [google_service_account.bucket_service_account](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [google_storage_bucket.shared_bucket](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket) | resource |
 | [google_storage_bucket_iam_member.shared_bucket_member](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_iam_member) | resource |
@@ -45,8 +43,6 @@ Along with a development server, securized networking access are provided.
 | core | Core unit of the workstation environment | ```object({ network = object({ name = string base_cidr_block = string }) })``` | n/a |
 | project\_id | ID of the project. | `string` | n/a |
 | region | Geographical *region* for Google Cloud Platform. | `string` | n/a |
-| rsa\_key | RSA private key for SSH server. Confidential, should only be set by environment variable *TF\_VAR\_rsa\_key* | `string` | n/a |
-| rsa\_pub | RSA public key for SSH server. Confidential, should only be set by environment variable *TF\_VAR\_rsa\_pub* | `string` | n/a |
 | ssh\_pub | User public key for SSH authentication. Confidential, should only be set by environment variable *TF\_VAR\_ssh\_pub* | `string` | n/a |
 
 ## Outputs

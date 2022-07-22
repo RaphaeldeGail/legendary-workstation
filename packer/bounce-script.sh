@@ -60,5 +60,9 @@ if ! sudo test -s /etc/ssh/sshd_config.d/custom.conf; then
 fi
 echo "Configuration file successfully loaded"
 
+echo "Installing simple Nginx server"
+sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet update
+sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet -y install nginx
+
 echo "Build succesful"
 exit 0

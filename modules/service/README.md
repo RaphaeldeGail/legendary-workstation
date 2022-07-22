@@ -34,6 +34,7 @@ No modules.
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | back\_network | Back network characteristics | ```object({ name = string base_cidr_block = string id = string })``` | n/a |
+| compute\_image | The compute image to build instance for this service. Must be of the form projects/{project}/global/images/{image} | `string` | n/a |
 | destination\_ip | IP address of main destination for the service | `string` | n/a |
 | full\_version | Complete version of the service | `string` | n/a |
 | index | The index of the service, as a number, among the services list | `number` | n/a |
