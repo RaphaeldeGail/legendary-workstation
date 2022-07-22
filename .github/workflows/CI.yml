@@ -109,6 +109,7 @@ jobs:
   clean:
     runs-on: ubuntu-20.04
     needs: [main]
+    if: ${{ always() }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
