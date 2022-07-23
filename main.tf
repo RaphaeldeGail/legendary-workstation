@@ -74,7 +74,7 @@ module "ssh_service" {
 
   index = 1
 
-  compute_image = "projects/lab-v1-0hw3q17w6a1y30jo-a5114/global/images/bounce-v1658500063-ubuntu-20"
+  compute_image = "projects/lab-v1-0hw3q17w6a1y30jo-a5114/global/images/bounce-v1658591198-ubuntu-20"
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
@@ -91,7 +91,7 @@ module "http_service" {
   source = "./modules/service"
 
   name           = "http"
-  full_version   = "1.0.1"
+  full_version   = "1.0.0"
   destination_ip = "86.70.78.151/32"
   port           = 443
 

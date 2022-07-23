@@ -7,22 +7,20 @@ ssh_deletekeys: true
 # cloud-init adds are printed to the console. Setting
 # no_ssh_fingerprints to true suppresses this output.
 no_ssh_fingerprints: false
-
 # By default, (most) ssh host keys are printed to the console. Setting
 # emit_keys_to_console to false suppresses this output.
 ssh:
   emit_keys_to_console: false
-
 ## Setup users profiles
 users:
   - name: raphael
     primary_group: raphael
     groups: users
     no_create_home: false
+    shell: /bin/bash
     lock_passwd: true
     ssh_authorized_keys:
       - ${trimspace(ssh_public)}
-
 write_files:
   - path: /etc/envoy.yaml
     permissions: 0644
@@ -81,7 +79,6 @@ write_files:
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
               sni: www.envoyproxy.io
-
   - path: /etc/systemd/system/envoy.service
     permissions: 0644
     owner: root
