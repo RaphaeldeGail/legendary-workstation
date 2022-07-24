@@ -128,7 +128,7 @@ resource "google_compute_instance_template" "main" {
     subnetwork = google_compute_subnetwork.back_subnetwork.id
   }
 
-  metadata = merge(var.metadata, { block-project-ssh-keys="true" })
+  metadata = merge(var.metadata, { block-project-ssh-keys=true })
 
   lifecycle {
     create_before_destroy = true

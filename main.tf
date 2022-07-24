@@ -64,6 +64,10 @@ resource "google_compute_router_nat" "nat_gateway" {
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
 
+locals {
+  startup-script = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
+}
+
 module "ssh_service" {
   source = "./modules/service"
 
@@ -74,16 +78,15 @@ module "ssh_service" {
 
   index = 1
 
-  compute_image = "projects/lab-v1-0hw3q17w6a1y30jo-a5114/global/images/bounce-v1658591198-ubuntu-20"
+  compute_image = join("/", ["projects", var.project_id, "global/images", "bounce-v1658674535-ubuntu-20"])
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data              = trimspace(templatefile("./cloud-config.tpl", { ssh_public = var.ssh_pub }))
-    startup-script         = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
-    block-project-ssh-keys = false
+    user-data      = trimspace(templatefile("./bounce-config.tpl", { ssh_public = var.ssh_pub }))
+    startup-script = local.startup-script
   }
 }
 
@@ -97,16 +100,15 @@ module "http_service" {
 
   index = 2
 
-  compute_image = "projects/lab-v1-0hw3q17w6a1y30jo-a5114/global/images/envoy-v1657901517-ubuntu-20"
+  compute_image = join("/", ["projects", var.project_id, "global/images", "envoy-v1657901517-ubuntu-20"])
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data              = trimspace(templatefile("./cloud-config.tpl", { ssh_public = var.ssh_pub }))
-    startup-script         = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
-    block-project-ssh-keys = true
+    user-data      = trimspace(templatefile("./envoy-config.tpl", { ssh_public = var.ssh_pub }))
+    startup-script = local.startup-script
   }
 }
 
