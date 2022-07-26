@@ -41,6 +41,7 @@ No modules.
 | metadata | Metadata to input to service instances | `map(string)` | n/a |
 | name | Name of the service | `string` | n/a |
 | port | Port number for service | `number` | n/a |
+| service\_account | Email for the service account bound to the service | `string` | `null` |
 
 ## Outputs
 

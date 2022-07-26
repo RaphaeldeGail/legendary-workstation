@@ -130,6 +130,14 @@ resource "google_compute_instance_template" "main" {
 
   metadata = merge(var.metadata, { block-project-ssh-keys=true })
 
+  dynamic "service_account" {
+    for_each = var.service_account == null ? [] : [""]
+    content {
+      email  = var.service_account
+      scopes = ["cloud-platform"]
+    }
+  }
+
   lifecycle {
     create_before_destroy = true
   }

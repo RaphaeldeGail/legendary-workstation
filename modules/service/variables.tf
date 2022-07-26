@@ -41,3 +41,9 @@ variable "compute_image" {
     type = string
     description = "The compute image to build instance for this service. Must be of the form projects/{project}/global/images/{image}"
 }
+
+variable "service_account" {
+    type = string
+    description = "Email for the service account bound to the service"
+    default = null
+}

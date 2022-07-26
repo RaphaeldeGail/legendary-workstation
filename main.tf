@@ -90,6 +90,18 @@ module "ssh_service" {
   }
 }
 
+resource "google_service_account" "trafficdirector_account" {
+  account_id   = "trafficdirector-client"
+  description  = "Trafficdirector Client"
+  display_name = "Trafficdirector Client"
+}
+
+resource "google_project_iam_member" "trafficdirector_client" {
+  project = var.project_id
+  role    = "roles/trafficdirector.client"
+  member  = "serviceAccount:${google_service_account.trafficdirector_account.email}"
+}
+
 module "http_service" {
   source = "./modules/service"
 
@@ -107,9 +119,11 @@ module "http_service" {
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data      = trimspace(templatefile("./envoy-config.tpl", { ssh_public = var.ssh_pub }))
+    user-data      = trimspace(templatefile("./envoy-config.tpl", {}))
     startup-script = local.startup-script
+    ssh-keys       = "raphael:${file("/home/raphael/.ssh/id_rsa.pub")}"
   }
+  service_account = google_service_account.trafficdirector_account.email
 }
 
 /*
