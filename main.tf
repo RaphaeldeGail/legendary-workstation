@@ -121,7 +121,7 @@ module "http_service" {
   metadata = {
     user-data      = trimspace(templatefile("./envoy-config.tpl", {}))
     startup-script = local.startup-script
-    ssh-keys       = "raphael:${file("/home/raphael/.ssh/id_rsa.pub")}"
+    ssh-keys       = join(":", ["raphael", var.ssh_pub])
   }
   service_account = google_service_account.trafficdirector_account.email
 }
