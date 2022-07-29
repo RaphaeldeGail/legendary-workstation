@@ -7,6 +7,14 @@ packer {
   }
 }
 
+variable "server_key" {
+  type = string
+}
+
+variable "server_cert" {
+  type = string
+}
+
 source "googlecompute" "custom" {
   project_id                      = "lab-v1-0hw3q17w6a1y30jo-a5114"
   source_image                    = "ubuntu-2004-focal-v20220118"
@@ -29,8 +37,12 @@ source "googlecompute" "custom" {
 
 build {
   sources = ["sources.googlecompute.custom"]
-
+  
   provisioner "shell" {
+    environment_vars = [
+      "SERVER_CERT=${var.server_cert}",
+      "SERVER_KEY=${var.server_key}"
+    ]
     script = "./envoy-script.sh"
   }
 }

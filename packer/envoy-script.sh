@@ -5,6 +5,79 @@ while sudo fuser /var/lib/dpkg/lock; do
    sleep 5
 done
 
+if [ -z "$SERVER_KEY" ]; then
+   echo "No private key SERVER_KEY found"
+   exit 1
+fi
+
+if [ -z "$SERVER_CERT" ]; then
+   echo "No public certificate SERVER_CERT found"
+   exit 1
+fi
+
+echo "Loading private key"
+echo "$SERVER_KEY" | sudo tee /etc/ssl/private/server.key > /dev/null
+sudo chown root:root /etc/ssl/private/server.key
+sudo chmod 400 /etc/ssl/private/server.key
+
+echo "Loading public certificate"
+echo "$SERVER_CERT" | sudo tee /etc/ssl/certs/server.pem > /dev/null
+sudo chown root:root /etc/ssl/certs/server.pem
+sudo chmod 600 /etc/ssl/certs/server.pem
+
+if ! sudo test -f /etc/ssl/private/server.key; then
+   echo "private key /etc/ssl/private/server.key was not correctly written"
+   exit 1
+fi
+if ! sudo test -s /etc/ssl/private/server.key; then
+   echo "private key /etc/ssl/private/server.key is empty"
+   exit 1
+fi
+echo "Private key successfully loaded"
+
+if ! sudo test -f /etc/ssl/certs/server.pem; then
+   echo "public certificate /etc/ssl/certs/server.pem was not correctly written"
+   exit 1
+fi
+if ! sudo test -s /etc/ssl/certs/server.pem; then
+   echo "public certificate /etc/ssl/certs/server.pem is empty"
+   exit 1
+fi
+echo "Public key successfully loaded"
+
+cat | sudo tee /etc/systemd/system/envoy.service > /dev/null <<EOF
+[Unit]
+Description=The ENVOY proxy server
+After=syslog.target network-online.target remote-fs.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+PIDFile=/run/envoy.pid
+ExecStartPre=/bin/bash -c '/usr/local/bin/envoy --mode validate -c /etc/envoy.yaml | tee'
+ExecStart=/bin/bash -c '/usr/local/bin/envoy -c /etc/envoy.yaml | tee'
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo chown root:root /etc/systemd/system/envoy.service
+sudo chmod 644 /etc/systemd/system/envoy.service
+
+if ! sudo test -f /etc/systemd/system/envoy.service; then
+   echo "Service file /etc/systemd/system/envoy.service was not correctly written"
+   exit 1
+fi
+if ! sudo test -s /etc/systemd/system/envoy.service; then
+   echo "Service file /etc/systemd/system/envoy.service is empty"
+   exit 1
+fi
+echo "Service file successfully loaded"
+
+sudo systemctl daemon-reload
+sudo systemctl enable envoy
+
 sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet update
 sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet -y install \
    autoconf \

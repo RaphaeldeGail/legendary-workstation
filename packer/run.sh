@@ -3,9 +3,11 @@
 export ENV="test"
 export PKR_VAR_rsa_key=$(cat ../.secrets/rsa.key)
 export PKR_VAR_rsa_pub=$(cat ../.secrets/rsa.pub)
+export PKR_VAR_server_key=$(cat ../.secrets/server.key)
+export PKR_VAR_server_cert=$(cat ../.secrets/server.pem)
 
 # Set here the packer file to build
-file='bounce.pkr.hcl'
+file='envoy.pkr.hcl'
 
 echo "*start: $(date)"
 
