@@ -64,6 +64,10 @@ resource "google_compute_router_nat" "nat_gateway" {
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
 
+locals {
+  startup-script = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
+}
+
 module "ssh_service" {
   source = "./modules/service"
 
@@ -74,38 +78,52 @@ module "ssh_service" {
 
   index = 1
 
+  compute_image = join("/", ["projects", var.project_id, "global/images", "bounce-v1658674535-ubuntu-20"])
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data              = trimspace(templatefile("./cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub, ssh_public = var.ssh_pub }))
-    startup-script         = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
-    block-project-ssh-keys = false
+    user-data      = trimspace(templatefile("./bounce-config.tpl", { ssh_public = var.ssh_pub }))
+    startup-script = local.startup-script
   }
+}
+
+resource "google_service_account" "trafficdirector_account" {
+  account_id   = "trafficdirector-client"
+  description  = "Trafficdirector Client"
+  display_name = "Trafficdirector Client"
+}
+
+resource "google_project_iam_member" "trafficdirector_client" {
+  project = var.project_id
+  role    = "roles/trafficdirector.client"
+  member  = "serviceAccount:${google_service_account.trafficdirector_account.email}"
 }
 
 module "http_service" {
   source = "./modules/service"
 
   name           = "http"
-  full_version   = "1.0.1"
+  full_version   = "1.0.0"
   destination_ip = "86.70.78.151/32"
   port           = 443
 
   index = 2
 
+  compute_image = join("/", ["projects", var.project_id, "global/images", "envoy-v1659108720-ubuntu-20"])
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data              = trimspace(templatefile("./cloud-config.tpl", { rsa_private = var.rsa_key, rsa_public = var.rsa_pub, ssh_public = var.ssh_pub }))
-    startup-script         = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
-    block-project-ssh-keys = true
+    user-data      = trimspace(templatefile("./envoy-config.tpl", {}))
+    startup-script = local.startup-script
+    ssh-keys       = join(":", ["raphael", var.ssh_pub])
   }
+  service_account = google_service_account.trafficdirector_account.email
 }
 
 resource "google_compute_disk" "data_disk" {

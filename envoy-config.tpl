@@ -1,31 +1,14 @@
 #cloud-config
 
-## Setup of SSH server
-ssh_deletekeys: true
-ssh_keys:
-    rsa_private: |
-        ${indent(8, trimspace(rsa_private))}
-    rsa_public: ${trimspace(rsa_public)}
-
-## Setup users profiles
-users:
-  - name: raphael
-    primary_group: raphael
-    groups: users
-    no_create_home: false
-    lock_passwd: true
-    ssh_authorized_keys:
-      - ${trimspace(ssh_public)}
-
+## Main configuration file and service definition file
 write_files:
   - path: /etc/envoy.yaml
     permissions: 0644
     owner: root
     content: |
       static_resources:
-
         listeners:
-        - name: listener_0
+        - name: main_listener
           address:
             socket_address:
               address: 0.0.0.0
@@ -36,6 +19,8 @@ write_files:
               typed_config:
                 "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
                 stat_prefix: ingress_http
+                server_name: lab.wansho.fr
+                preserve_external_request_id: true
                 access_log:
                 - name: envoy.access_loggers.stdout
                   typed_config:
@@ -49,53 +34,38 @@ write_files:
                   virtual_hosts:
                   - name: local_service
                     domains: ["*"]
+                    require_tls: ALL
+                    cors:
+                      allow_methods: 'OPTION, GET'
                     routes:
                     - match:
                         prefix: "/"
                       route:
-                        host_rewrite_literal: www.envoyproxy.io
-                        cluster: service_envoyproxy_io
-
+                        cluster: service_workstation
+                        cluster_not_found_response_code: SERVICE_UNAVAILABLE
+            transport_socket:
+              name: envoy.transport_sockets.tls
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+                common_tls_context:
+                  alpn_protocols: ["h2"]
+                  tls_certificates:
+                    - certificate_chain:
+                        filename: /etc/ssl/certs/server.pem
+                      private_key:
+                        filename: /etc/ssl/private/server.key
         clusters:
-        - name: service_envoyproxy_io
+        - name: service_workstation
           type: LOGICAL_DNS
           # Comment out the following line to test on v6 networks
           dns_lookup_family: V4_ONLY
+          lb_policy: ROUND_ROBIN
           load_assignment:
-            cluster_name: service_envoyproxy_io
+            cluster_name: service_workstation
             endpoints:
             - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: www.envoyproxy.io
+                      address: 10.1.0.2
                       port_value: 443
-          transport_socket:
-            name: envoy.transport_sockets.tls
-            typed_config:
-              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-              sni: www.envoyproxy.io
-
-  - path: /etc/systemd/system/envoy.service
-    permissions: 0644
-    owner: root
-    content: |
-      [Unit]
-      Description=The ENVOY proxy server
-      After=syslog.target network-online.target remote-fs.target nss-lookup.target
-      Wants=network-online.target
-
-      [Service]
-      Type=simple
-      PIDFile=/run/envoy.pid
-      ExecStartPre=/bin/bash -c '/usr/local/bin/envoy --mode validate -c /etc/envoy.yaml | tee'
-      ExecStart=/bin/bash -c '/usr/local/bin/envoy -c /etc/envoy.yaml | tee'
-      ExecStop=/bin/kill -s QUIT $MAINPID
-      PrivateTmp=true
-
-      [Install]
-      WantedBy=multi-user.target
-
-runcmd:
-  - systemctl daemon-reload
-  - systemctl start envoy.service
