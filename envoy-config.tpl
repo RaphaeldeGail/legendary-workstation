@@ -33,7 +33,7 @@ write_files:
                   name: local_route
                   virtual_hosts:
                   - name: local_service
-                    domains: ["*.lab.wansho.fr"]
+                    domains: ["*"]
                     require_tls: ALL
                     cors:
                       allow_methods: 'OPTION, GET'
@@ -68,4 +68,4 @@ write_files:
                   address:
                     socket_address:
                       address: 10.1.0.2
-                      port_value: 80
+                      port_value: 443

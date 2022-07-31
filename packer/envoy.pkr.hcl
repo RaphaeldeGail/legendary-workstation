@@ -20,8 +20,9 @@ source "googlecompute" "custom" {
   source_image                    = "ubuntu-2004-focal-v20220118"
   disable_default_service_account = true
   communicator                    = "ssh"
-  ssh_username                    = "worker"
+  ssh_username                    = "packer-bot"
   zone                            = "europe-west1-b"
+  //skip_create_image               = true
 
   image_name        = "envoy-v{{timestamp}}-ubuntu-20"
   image_description = "Ubuntu 20.04 based VM with envoy, default configuration preinstalled."
