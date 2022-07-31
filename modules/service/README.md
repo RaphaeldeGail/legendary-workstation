@@ -3,7 +3,10 @@
 
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| terraform | ~> 1.1.2 |
+| google | ~> 4.30.0 |
 
 ## Modules
 

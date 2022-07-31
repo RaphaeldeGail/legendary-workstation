@@ -1,6 +1,15 @@
 /**
  * # Service
  */
+terraform {
+  required_version = "~> 1.1.2"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 4.30.0"
+    }
+  }
+}
 
 locals {
     front_network = [var.name, "front", "network"]
@@ -10,7 +19,7 @@ locals {
     front_firewall = ["allow", "from", "destination", "to", var.name, "tcp", tostring(var.port)]
     back_firewall = ["allow", "from", var.name, "to", "workspace", "tcp", tostring(var.port)]
     healthcheck_firewall = ["allow", "from", "healthchecks", "to", var.name, "tcp", tostring(80)]
-    template = [var.name, "template", "v${replace(var.full_version, ".", "-")}"]
+    template = [var.name, "template", "v${replace(var.full_version, ".", "-")}", tostring(formatdate("YYYYMMDDhhmmss", timestamp()))]
 }
 
 resource "google_compute_network" "front_network" {
@@ -106,10 +115,18 @@ resource "google_compute_instance_template" "main" {
 
   tags                 = [var.name]
   instance_description = title("Instance based on ${join(" ", local.template)}")
-  machine_type         = "f1-micro"
+  machine_type         = "e2-micro"
   can_ip_forward       = true
 
+  labels = {
+    name    = var.name
+    version = replace(var.full_version, ".", "-")
+  }
+
   scheduling {
+    provisioning_model = "SPOT"
+    # Only STOP action is available for SPOT-type instances managed by a group
+    instance_termination_action = "STOP"
     preemptible       = true
     automatic_restart = false
   }
@@ -139,7 +156,15 @@ resource "google_compute_instance_template" "main" {
   }
 
   lifecycle {
+    # Create the new template before destroying the previous so the google manager can update itself before the old template is destroyed
     create_before_destroy = true
+    ignore_changes = [
+      # Ignore changes to name, description and instance_description because all contain timestamp
+      # instead name and full_version are stored in labels that will trigger an update if change
+      name,
+      description,
+      instance_description,
+    ]
   }
 }
 
@@ -149,7 +174,7 @@ data "google_compute_zones" "available" {
 resource "google_compute_instance_group_manager" "main" {
   count = min(length(data.google_compute_zones.available.names), 2)
 
-  name               = join("-", [var.name, "group", count.index])
+  name               = join("-", [var.name, replace(var.full_version, ".", "-"), "group", count.index])
   description        = title(join(" ", [var.name, "group", count.index]))
   base_instance_name = join("-", [var.name, replace(var.full_version, ".", "-"), count.index])
   zone               = data.google_compute_zones.available.names[count.index]
