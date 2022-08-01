@@ -78,7 +78,7 @@ module "ssh_service" {
 
   index = 1
 
-  compute_image = join("/", ["projects", var.project_id, "global/images", "bounce-v1658674535-ubuntu-20"])
+  compute_image = "bounce-v1658674535-ubuntu-20"
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
@@ -100,7 +100,7 @@ module "http_service" {
 
   index = 2
 
-  compute_image = join("/", ["projects", var.project_id, "global/images", "envoy-v1659108720-ubuntu-20"])
+  compute_image = "envoy-v1659108720-ubuntu-20"
   back_network = {
     name            = var.core.network.name
     base_cidr_block = var.core.network.base_cidr_block
