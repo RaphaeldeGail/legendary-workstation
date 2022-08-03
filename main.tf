@@ -64,17 +64,12 @@ resource "google_compute_router_nat" "nat_gateway" {
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
 
-locals {
-  startup-script = trimspace(templatefile("./startup-script.tpl", { local_ip = "86.70.78.151/32" }))
-}
-
 module "ssh_service" {
   source = "./modules/service"
 
-  name           = "ssh"
-  full_version   = "1.0.0"
-  destination_ip = "86.70.78.151/32"
-  port           = 22
+  name       = "ssh"
+  desktop_ip = "86.70.78.151/32"
+  port       = 22
 
   index = 1
 
@@ -85,18 +80,16 @@ module "ssh_service" {
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data      = trimspace(templatefile("./bounce-config.tpl", { ssh_public = var.ssh_pub }))
-    startup-script = local.startup-script
+    user-data = trimspace(templatefile("./bounce-config.tpl", { ssh_public = var.ssh_pub }))
   }
 }
 
 module "http_service" {
   source = "./modules/service"
 
-  name           = "http"
-  full_version   = "1.0.0"
-  destination_ip = "86.70.78.151/32"
-  port           = 443
+  name       = "http"
+  desktop_ip = "86.70.78.151/32"
+  port       = 443
 
   index = 2
 
@@ -107,8 +100,7 @@ module "http_service" {
     id              = google_compute_network.network.id
   }
   metadata = {
-    user-data      = trimspace(templatefile("./envoy-config.tpl", {}))
-    startup-script = local.startup-script
+    user-data = trimspace(templatefile("./envoy-config.tpl", {}))
   }
 }
 

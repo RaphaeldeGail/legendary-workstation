@@ -13,8 +13,8 @@ terraform fmt
 terraform-docs .
 
 echo '*Terraform Format'
-if ! terraform fmt -check -list=false; then
-    terraform fmt -check -diff
+if ! terraform fmt -check -list=false && terraform fmt -check -list=false ./modules/*/; then
+    terraform fmt -check -diff && terraform fmt -check ./modules/*/
     exit 1
 fi
 echo '*OK (Terraform Format)'
