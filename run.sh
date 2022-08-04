@@ -64,3 +64,4 @@ else
 fi
 
 echo "*end: $(date)"
+exit 0

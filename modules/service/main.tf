@@ -57,26 +57,28 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 4.30.0"
+      version = ">= 4.30.0"
     }
   }
 }
 
 locals {
+  // The IP range for the front network
   ip_cidr_range = "172.16.0.0/12"
   // This is the version of the module
   version   = "1-0-0"
-  template  = [var.name, "v${local.version}", "template"]
+  name      = lower(var.name)
+  template  = [local.name, "v${local.version}", "template"]
   timestamp = tostring(formatdate("YYYYMMDDhhmmss", timestamp()))
   labels = {
-    name    = var.name
+    name    = local.name
     version = local.version
   }
   startup-script = trimspace(templatefile("${path.module}/startup-script.tftpl", { local_ip = var.desktop_ip }))
 }
 
 resource "google_compute_network" "front_network" {
-  name        = join("-", [var.name, "front", "network"])
+  name        = join("-", [local.name, "front", "network"])
   description = join(" ", ["IP address range:", local.ip_cidr_range])
 
   auto_create_subnetworks         = false
@@ -85,7 +87,7 @@ resource "google_compute_network" "front_network" {
 }
 
 resource "google_compute_subnetwork" "front_subnetwork" {
-  name        = join("-", [var.name, "front", "subnet"])
+  name        = join("-", [local.name, "front", "subnet"])
   description = null
 
   network       = google_compute_network.front_network.id
@@ -93,18 +95,18 @@ resource "google_compute_subnetwork" "front_subnetwork" {
 }
 
 resource "google_compute_route" "route" {
-  name        = join("-", [var.name, "route", "to", "desktop"])
+  name        = join("-", [local.name, "route", "to", "desktop"])
   description = "Route to the desktop public IP address"
 
   network          = google_compute_network.front_network.name
   dest_range       = var.desktop_ip
   next_hop_gateway = "default-internet-gateway"
   priority         = 10
-  tags             = [var.name]
+  tags             = [local.name]
 }
 
 resource "google_compute_subnetwork" "back_subnetwork" {
-  name        = join("-", [var.name, "back", "subnet"])
+  name        = join("-", [local.name, "back", "subnet"])
   description = null
 
   network       = var.back_network.id
@@ -112,8 +114,8 @@ resource "google_compute_subnetwork" "back_subnetwork" {
 }
 
 resource "google_compute_firewall" "to_front" {
-  name        = join("-", ["allow", "from", "desktop", "to", var.name, "tcp", tostring(var.port)])
-  description = "Allow requests from the desktop public IP address to the ${var.name} service instances"
+  name        = join("-", ["allow", "from", "desktop", "to", local.name, "tcp", tostring(var.port)])
+  description = "Allow requests from the desktop public IP address to the ${local.name} service instances"
 
   network   = google_compute_network.front_network.id
   direction = "INGRESS"
@@ -125,12 +127,12 @@ resource "google_compute_firewall" "to_front" {
   }
 
   source_ranges = [var.desktop_ip]
-  target_tags   = [var.name]
+  target_tags   = [local.name]
 }
 
 resource "google_compute_firewall" "from_back" {
-  name        = join("-", ["allow", "from", var.name, "to", "workspace", "tcp", tostring(var.port)])
-  description = "Allow requests from the ${var.name} service to the workstation"
+  name        = join("-", ["allow", "from", local.name, "to", "workspace", "tcp", tostring(var.port)])
+  description = "Allow requests from the ${local.name} service to the workstation"
 
   network   = var.back_network.id
   direction = "INGRESS"
@@ -141,7 +143,7 @@ resource "google_compute_firewall" "from_back" {
     ports    = [tostring(var.port)]
   }
 
-  source_tags = [var.name]
+  source_tags = [local.name]
   target_tags = ["workspace"]
 }
 
@@ -150,8 +152,8 @@ data "google_netblock_ip_ranges" "legacy_healthcheck" {
 }
 
 resource "google_compute_firewall" "legacy_healthcheck" {
-  name        = join("-", ["allow", "from", "healthchecks", "to", var.name, "tcp", tostring(80)])
-  description = "Allow HTTP requests from Google healthchecks to ${var.name} service instances"
+  name        = join("-", ["allow", "from", "healthchecks", "to", local.name, "tcp", tostring(80)])
+  description = "Allow HTTP requests from Google healthchecks to ${local.name} service instances"
   network     = google_compute_network.front_network.id
   direction   = "INGRESS"
   priority    = 100
@@ -162,7 +164,7 @@ resource "google_compute_firewall" "legacy_healthcheck" {
   }
 
   source_ranges = data.google_netblock_ip_ranges.legacy_healthcheck.cidr_blocks_ipv4
-  target_tags   = [var.name]
+  target_tags   = [local.name]
 }
 
 data "google_compute_image" "custom_image" {
@@ -173,7 +175,7 @@ resource "google_compute_instance_template" "main" {
   name        = join("-", concat(local.template, [local.timestamp]))
   description = title(join(" ", local.template))
 
-  tags                 = [var.name]
+  tags                 = [local.name]
   instance_description = title("Instance based on ${join(" ", concat(local.template, ["build @", local.timestamp]))}")
   machine_type         = "e2-micro"
   can_ip_forward       = true
@@ -228,10 +230,10 @@ data "google_compute_zones" "available" {
 resource "google_compute_instance_group_manager" "main" {
   count = min(length(data.google_compute_zones.available.names), 2)
 
-  name        = join("-", [var.name, local.version, "group", count.index])
-  description = "Manages  all instances of the ${var.name} service on version ${local.version} @Zone ${data.google_compute_zones.available.names[count.index]}"
+  name        = join("-", [local.name, local.version, "group", count.index])
+  description = "Manages  all instances of the ${local.name} service on version ${local.version} @Zone ${data.google_compute_zones.available.names[count.index]}"
 
-  base_instance_name = join("-", [var.name, local.version, "service", data.google_compute_zones.available.names[count.index]])
+  base_instance_name = join("-", [local.name, local.version, "service", data.google_compute_zones.available.names[count.index]])
   zone               = data.google_compute_zones.available.names[count.index]
 
   version {
@@ -243,8 +245,8 @@ resource "google_compute_instance_group_manager" "main" {
 }
 
 resource "google_compute_http_health_check" "default" {
-  name        = join("-", [var.name, "http", "healthcheck"])
-  description = "Legacy HTTP healthcheck used by network load balancer for service ${var.name}"
+  name        = join("-", [local.name, "http", "healthcheck"])
+  description = "Legacy HTTP healthcheck used by network load balancer for service ${local.name}"
 
   port               = 80
   request_path       = "/"
@@ -253,8 +255,8 @@ resource "google_compute_http_health_check" "default" {
 }
 
 resource "google_compute_target_pool" "failover" {
-  name        = join("-", [var.name, "pool", "failover"])
-  description = "Failover pool for service ${var.name}"
+  name        = join("-", [local.name, "pool", "failover"])
+  description = "Failover pool for service ${local.name}"
 
   instances        = null
   session_affinity = "CLIENT_IP"
@@ -264,8 +266,8 @@ resource "google_compute_target_pool" "failover" {
 }
 
 resource "google_compute_target_pool" "default" {
-  name        = join("-", [var.name, "pool", "main"])
-  description = "Default pool for service ${var.name}"
+  name        = join("-", [local.name, "pool", "main"])
+  description = "Default pool for service ${local.name}"
 
   instances        = null
   session_affinity = "CLIENT_IP"
@@ -279,8 +281,8 @@ resource "google_compute_target_pool" "default" {
 resource "google_compute_forwarding_rule" "front_loadbalancer" {
   count = min(length(data.google_compute_zones.available.names), 1)
 
-  name        = join("-", [var.name, "frontend", "loadbalancer"])
-  description = "Load balancer for service ${var.name}"
+  name        = join("-", [local.name, "frontend", "loadbalancer"])
+  description = "Load balancer for service ${local.name}"
 
   labels                = local.labels
   ip_protocol           = "TCP"

@@ -10,11 +10,12 @@ variable "region" {
   nullable    = false
 }
 
-variable "core" {
+variable "workspace" {
   type = object({
+    name = string
     network = object({
-      name            = string
       base_cidr_block = string
+      desktop_ip      = string
     })
   })
   description = "Core unit of the workstation environment"

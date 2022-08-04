@@ -15,9 +15,8 @@ variable "port" {
 
 variable "back_network" {
   type = object({
-    name            = string
-    base_cidr_block = string
     id              = string
+    base_cidr_block = string
   })
   description = "Main workstation network characteristics"
 }

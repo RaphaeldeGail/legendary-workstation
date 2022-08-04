@@ -56,7 +56,7 @@ serveral instance template from the version 1-0-0 for http service will be creat
 | Name | Version |
 |------|---------|
 | terraform | ~> 1.1.2 |
-| google | ~> 4.30.0 |
+| google | >= 4.30.0 |
 
 ## Modules
 
@@ -87,7 +87,7 @@ No modules.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| back\_network | Main workstation network characteristics | ```object({ name = string base_cidr_block = string id = string })``` | n/a |
+| back\_network | Main workstation network characteristics | ```object({ id = string base_cidr_block = string })``` | n/a |
 | compute\_image | The compute image name to build instance for this service | `string` | n/a |
 | desktop\_ip | Public IP address of the desktop to connect to the workstation | `string` | n/a |
 | index | A global index of the service which may not repeat itself among different instanciation | `number` | n/a |

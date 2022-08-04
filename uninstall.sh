@@ -27,3 +27,4 @@ fi
 echo '*OK (Terraform Apply)'
 
 echo "*end: $(date)"
+exit 0
