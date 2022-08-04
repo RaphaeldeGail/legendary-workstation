@@ -1,8 +1,9 @@
 region = "europe-west1"
 
-core = {
+workspace = {
+  name = "workspace"
   network = {
-    name            = "main"
     base_cidr_block = "10.1.0.0/27"
+    desktop_ip      = "86.70.78.151/32"
   }
 }

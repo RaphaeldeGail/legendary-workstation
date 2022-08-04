@@ -1,49 +1,43 @@
 variable "name" {
-    type = string
-    description = "Name of the service"
+  type        = string
+  description = "Name of the service. It may be the name of a protocol (HTTP) or any name. Must be lowercase"
 }
 
-variable "full_version" {
-    type = string
-    description = "Complete version of the service"
-}
-
-variable "destination_ip" {
-    type = string
-    description = "IP address of main destination for the service"
+variable "desktop_ip" {
+  type        = string
+  description = "Public IP address of the desktop to connect to the workstation"
 }
 
 variable "port" {
-    type = number
-    description = "Port number for service"
+  type        = number
+  description = "Port number for service to expose. Should be related to the protocol (HTTP, SSH)"
 }
 
 variable "back_network" {
-    type = object({
-        name = string
-        base_cidr_block = string
-        id = string
-    })
-    description = "Back network characteristics"
+  type = object({
+    id              = string
+    base_cidr_block = string
+  })
+  description = "Main workstation network characteristics"
 }
 
 variable "metadata" {
-    type = map(string)
-    description = "Metadata to input to service instances"
+  type        = map(string)
+  description = "Metadata to input to service instances"
 }
 
 variable "index" {
-    type = number
-    description = "The index of the service, as a number, among the services list"
+  type        = number
+  description = "A global index of the service which may not repeat itself among different instanciation"
 }
 
 variable "compute_image" {
-    type = string
-    description = "The compute image to build instance for this service. Must be of the form projects/{project}/global/images/{image}"
+  type        = string
+  description = "The compute image name to build instance for this service"
 }
 
 variable "service_account" {
-    type = string
-    description = "Email for the service account bound to the service"
-    default = null
+  type        = string
+  description = "Email for the service account bound to the service. Defaults to null"
+  default     = null
 }
