@@ -3,7 +3,7 @@ export TF_IN_AUTOMATION="true"
 export TF_INPUT=0
 #export TF_LOG="debug"
 
-export TF_VAR_user="{ name=\"$USER\", public_key=\"$(cat /home/$USER/.ssh/id_rsa.pub)\", desktop_ip=\"$(curl ifconfig.me)/32\" }"
+export TF_VAR_user="{ name=\"aaa\", key=\"\", ip=\"1.1.1.1\" }"
 
 echo "*start: $(date)"
 

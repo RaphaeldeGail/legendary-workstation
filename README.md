@@ -35,6 +35,8 @@ Simply run terraform apply.
 - Build a module to create multiple workstations
 - Improve image builds
 - Testing the platform
+- Improve workstation data disk mount
+- Add GCS Fuse to mount the GCS bucket to the workstation
 
 ## Requirements
 
@@ -71,8 +73,8 @@ Simply run terraform apply.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| user | The user who will have access to the workstation | ```object({ name = string public_key = string desktop_ip = string })``` | n/a |
-| workspace | Core unit of the workstation environment | ```object({ name = string project_id = string region = string })``` | n/a |
+| user | The user who will have access to the workstation. Requires a **name**, the content of a public **key** for SSH authentication and the public IP address of the user.  The **name** attribute must follow UNIX name standards. the SSH public **key** should be one line and the *ip* attribute should be in the form *X.X.X.X* as standard IPv4. | ```object({ name = string key = string ip = string })``` | n/a |
+| workspace | The workspace that will be created on GCP. Requires a **name**, the ID of a GCP **project** and the **region** of deployment on GCP. The **name** attributes must contain only lowercase letters. | ```object({ name = string project = string region = string })``` | n/a |
 
 ## Outputs
 

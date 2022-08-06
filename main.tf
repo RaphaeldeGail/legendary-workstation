@@ -35,6 +35,9 @@
  * - Build a module to create multiple workstations
  * - Improve image builds
  * - Testing the platform
+ * - Improve workstation data disk mount
+ * - Add GCS Fuse to mount the GCS bucket to the workstation
+ *
  */
 
 terraform {
@@ -51,7 +54,7 @@ terraform {
 }
 
 provider "google" {
-  project = var.workspace.project_id
+  project = var.workspace.project
   region  = var.workspace.region
 }
 
@@ -108,7 +111,7 @@ module "ssh_service" {
 
   name = "ssh"
 
-  desktop_ip = var.user.desktop_ip
+  desktop_ip = join("/", [var.user.ip, "32"])
   port       = 22
   index      = 1
   // This is an image family
@@ -120,7 +123,7 @@ module "ssh_service" {
   }
 
   metadata = {
-    user-data = trimspace(templatefile("./bounce-config.tpl", { ssh_public = var.user.public_key, username = var.user.name }))
+    user-data = trimspace(templatefile("./bounce-config.tpl", { ssh_public = var.user.key, username = var.user.name }))
   }
 }
 
@@ -129,7 +132,7 @@ module "http_service" {
 
   name = "http"
 
-  desktop_ip = var.user.desktop_ip
+  desktop_ip = join("/", [var.user.ip, "32"])
   port       = 443
   index      = 2
   // This is an image family
@@ -231,7 +234,7 @@ resource "google_compute_instance" "workstation" {
   metadata = {
     startup-script         = "mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb; mkdir -p /mnt/disks/diskb; mount -o discard,defaults /dev/sdb /mnt/disks/diskb; chmod a+w /mnt/disks/diskb; echo '/dev/sdb /mnt/disks/diskb ext4 discard,defaults,rw 0 2' >> /etc/fstab"
     block-project-ssh-keys = true
-    ssh-keys               = join(":", [trimspace(var.user.name), trimspace(var.user.public_key)])
+    ssh-keys               = join(":", [trimspace(var.user.name), trimspace(var.user.key)])
   }
 
 }
