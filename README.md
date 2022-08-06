@@ -33,6 +33,8 @@ Simply run terraform apply.
 
 - Improve variables definition and usage
 - Build a module to create multiple workstations
+- Improve image builds
+- Testing the platform
 
 ## Requirements
 
@@ -69,10 +71,8 @@ Simply run terraform apply.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| project\_id | ID of the project. | `string` | n/a |
-| region | Geographical *region* for Google Cloud Platform. | `string` | n/a |
-| ssh\_pub | User public key for SSH authentication. Confidential, should only be set by environment variable *TF\_VAR\_ssh\_pub* | `string` | n/a |
-| workspace | Core unit of the workstation environment | ```object({ name = string network = object({ base_cidr_block = string desktop_ip = string }) })``` | n/a |
+| user | The user who will have access to the workstation | ```object({ name = string public_key = string desktop_ip = string })``` | n/a |
+| workspace | Core unit of the workstation environment | ```object({ name = string project_id = string region = string })``` | n/a |
 
 ## Outputs
 

@@ -24,7 +24,7 @@ jobs:
         run: terraform version
       - name: Check format of Terrraform files
         id: format
-        run: terraform fmt -check -list=false
+        run: terraform fmt -check && terraform fmt -check ./modules/*/
   docs:
     runs-on: ubuntu-20.04
     container:
@@ -41,6 +41,11 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [lint, docs]
     if: needs.lint.outputs.exitcode == 0 && needs.docs.outputs.exitcode == 0
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: 0
+      #TF_LOG: "debug"
+      GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -55,43 +60,25 @@ jobs:
           terraform_wrapper: true # optional, default is true
       - name: Initialize Terraform working directory
         env:
-          TF_IN_AUTOMATION: "true"
-          TF_INPUT: 0
-          #TF_LOG: "debug"
-          ENV: "test"
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           BACKEND_BUCKET: ${{ secrets.BACKEND_BUCKET }}
         run: terraform init -reconfigure -no-color -backend-config="bucket=$BACKEND_BUCKET"
       - name: Validate Terraform script
-        env:
-          TF_IN_AUTOMATION: "true"
-          TF_INPUT: 0
-          #TF_LOG: "debug"
-          ENV: "test"
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}   
         run: terraform validate -no-color
       - name: Plan infrastructure update
         env:
-          TF_IN_AUTOMATION: "true"
-          TF_INPUT: 0
-          #TF_LOG: "debug"
-          ENV: "test"
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-          TF_VAR_rsa_key: ${{ secrets.TF_VAR_rsa_key }}
-          TF_VAR_rsa_pub: ${{ secrets.TF_VAR_rsa_pub }}
-          TF_VAR_ssh_pub: ${{ secrets.TF_VAR_ssh_pub }}
-        run: terraform plan -no-color -var-file=./environments/$ENV.tfvars -out plan.out
+          TF_VAR_user: ${{ secrets.USER }}
+        run: terraform plan -no-color -out plan.out
       - name: Apply infrastructure update
-        env:
-          TF_IN_AUTOMATION: "true"
-          TF_INPUT: 0
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} 
-          #TF_LOG: "debug"
         run: terraform apply -no-color plan.out
   clean:
     runs-on: ubuntu-20.04
     needs: [main]
     if: ${{ always() }}
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: 0
+      #TF_LOG: "debug"
+      GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -106,28 +93,11 @@ jobs:
           terraform_wrapper: true # optional, default is true
       - name: Initialize Terraform working directory
         env:
-          TF_IN_AUTOMATION: "true"
-          TF_INPUT: 0
-          #TF_LOG: "debug"
-          ENV: "test"
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           BACKEND_BUCKET: ${{ secrets.BACKEND_BUCKET }}
         run: terraform init -reconfigure -no-color -backend-config="bucket=$BACKEND_BUCKET"
       - name: Plan infrastructure destroy
         env:
-          TF_IN_AUTOMATION: "true"
-          TF_INPUT: 0
-          #TF_LOG: "debug"
-          ENV: "test"
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-          TF_VAR_rsa_key: ${{ secrets.TF_VAR_rsa_key }}
-          TF_VAR_rsa_pub: ${{ secrets.TF_VAR_rsa_pub }}
-          TF_VAR_ssh_pub: ${{ secrets.TF_VAR_ssh_pub }}
-        run: terraform plan -no-color -var-file=./environments/$ENV.tfvars -destroy -out destroy.out
+          TF_VAR_user: ${{ secrets.USER }}
+        run: terraform plan -no-color -destroy -out destroy.out
       - name: Apply infrastructure destruction
-        env:
-          TF_IN_AUTOMATION: "true"
-          TF_INPUT: 0
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} 
-          #TF_LOG: "debug"
         run: terraform apply -no-color destroy.out
