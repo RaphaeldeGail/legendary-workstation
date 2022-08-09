@@ -123,7 +123,7 @@ module "ssh_service" {
   }
 
   metadata = {
-    user-data = trimspace(templatefile("./bounce-config.tpl", { ssh_public = var.user.key, username = var.user.name }))
+    user-data = trimspace(templatefile("./templates/bounce-config.tftpl", { ssh_public = var.user.key, username = var.user.name }))
   }
 }
 
@@ -144,7 +144,7 @@ module "http_service" {
   }
 
   metadata = {
-    user-data = trimspace(templatefile("./envoy-config.tpl", {}))
+    user-data = trimspace(templatefile("./templates/envoy-config.tftpl", { workstation_ip = google_compute_instance.workstation.network_interface[0].network_ip }))
   }
 }
 

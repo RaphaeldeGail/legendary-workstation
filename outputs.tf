@@ -1,8 +1,7 @@
-output "network" {
+output "access_ips" {
   value = {
-    name            = google_compute_network.network.name
-    base_cidr_block = local.base_cidr_block
-    id              = google_compute_network.network.id
+    ssh  = module.ssh_service.external_lb_address,
+    http = module.http_service.external_lb_address
   }
-  description = "Main network characteristics"
+  description = "Public IP addresses to access each service exposed for the workstation."
 }

@@ -80,5 +80,5 @@ Simply run terraform apply.
 
 | Name | Description |
 |------|-------------|
-| network | Main network characteristics |
+| access\_ips | Public IP addresses to access each service exposed for the workstation. |
 <!-- END_TF_DOCS -->
