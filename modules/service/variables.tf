@@ -1,16 +1,21 @@
 variable "name" {
   type        = string
-  description = "Name of the service. It may be the name of a protocol (HTTP) or any name. Must be lowercase"
+  description = "Name of the service. It may be the name of a protocol (HTTP) or any name. May only contains lowercase letters."
+
+  validation {
+    condition     = can(regex("^[a-z]*$", var.name))
+    error_message = "The service name should be a valid name with only lowercase letters allowed."
+  }
 }
 
 variable "desktop_ip" {
   type        = string
-  description = "Public IP address of the desktop to connect to the workstation"
+  description = "Public IP address of the desktop to connect to the workstation."
 }
 
 variable "port" {
   type        = number
-  description = "Port number for service to expose. Should be related to the protocol (HTTP, SSH)"
+  description = "Port number for service to expose. Should be related to the protocol (HTTP, SSH)."
 }
 
 variable "back_network" {
@@ -18,26 +23,26 @@ variable "back_network" {
     id              = string
     base_cidr_block = string
   })
-  description = "Main workstation network characteristics"
+  description = "Workstation network characteristics. Including the google **id** of the network and the **base_cidr_block** for authorized ranges of IP addresses."
 }
 
 variable "metadata" {
   type        = map(string)
-  description = "Metadata to input to service instances"
+  description = "Metadata input for service instances."
 }
 
 variable "index" {
   type        = number
-  description = "A global index of the service which may not repeat itself among different instanciation"
+  description = "A global index of the service which may not repeat itself among different instanciation."
 }
 
 variable "compute_image" {
   type        = string
-  description = "The compute image name to build instance for this service"
+  description = "The compute image family to build instance from, for this service."
 }
 
 variable "service_account" {
   type        = string
-  description = "Email for the service account bound to the service. Defaults to null"
+  description = "Email for the service account bound to the service. Defaults to null."
   default     = null
 }

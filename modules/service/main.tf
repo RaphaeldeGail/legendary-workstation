@@ -167,8 +167,8 @@ resource "google_compute_firewall" "legacy_healthcheck" {
   target_tags   = [local.name]
 }
 
-data "google_compute_image" "custom_image" {
-  name = var.compute_image
+data "google_compute_image" "image" {
+  family = var.compute_image
 }
 
 resource "google_compute_instance_template" "main" {
@@ -191,8 +191,8 @@ resource "google_compute_instance_template" "main" {
   }
 
   disk {
-    source_image = data.google_compute_image.custom_image.id
-    disk_size_gb = data.google_compute_image.custom_image.disk_size_gb
+    source_image = "global/images/family/${var.compute_image}"
+    disk_size_gb = data.google_compute_image.image.disk_size_gb
     auto_delete  = true
     boot         = true
   }

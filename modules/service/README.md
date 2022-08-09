@@ -79,7 +79,7 @@ No modules.
 | [google_compute_subnetwork.front_subnetwork](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
 | [google_compute_target_pool.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_target_pool) | resource |
 | [google_compute_target_pool.failover](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_target_pool) | resource |
-| [google_compute_image.custom_image](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
+| [google_compute_image.image](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
 | [google_compute_zones.available](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_zones) | data source |
 | [google_netblock_ip_ranges.legacy_healthcheck](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/netblock_ip_ranges) | data source |
 
@@ -87,14 +87,14 @@ No modules.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| back\_network | Main workstation network characteristics | ```object({ id = string base_cidr_block = string })``` | n/a |
-| compute\_image | The compute image name to build instance for this service | `string` | n/a |
-| desktop\_ip | Public IP address of the desktop to connect to the workstation | `string` | n/a |
-| index | A global index of the service which may not repeat itself among different instanciation | `number` | n/a |
-| metadata | Metadata to input to service instances | `map(string)` | n/a |
-| name | Name of the service. It may be the name of a protocol (HTTP) or any name. Must be lowercase | `string` | n/a |
-| port | Port number for service to expose. Should be related to the protocol (HTTP, SSH) | `number` | n/a |
-| service\_account | Email for the service account bound to the service. Defaults to null | `string` | `null` |
+| back\_network | Workstation network characteristics. Including the google **id** of the network and the **base\_cidr\_block** for authorized ranges of IP addresses. | ```object({ id = string base_cidr_block = string })``` | n/a |
+| compute\_image | The compute image family to build instance from, for this service. | `string` | n/a |
+| desktop\_ip | Public IP address of the desktop to connect to the workstation. | `string` | n/a |
+| index | A global index of the service which may not repeat itself among different instanciation. | `number` | n/a |
+| metadata | Metadata input for service instances. | `map(string)` | n/a |
+| name | Name of the service. It may be the name of a protocol (HTTP) or any name. May only contains lowercase letters. | `string` | n/a |
+| port | Port number for service to expose. Should be related to the protocol (HTTP, SSH). | `number` | n/a |
+| service\_account | Email for the service account bound to the service. Defaults to null. | `string` | `null` |
 
 ## Outputs
 

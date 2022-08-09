@@ -33,6 +33,10 @@ Simply run terraform apply.
 
 - Improve variables definition and usage
 - Build a module to create multiple workstations
+- Improve image builds
+- Testing the platform
+- Improve workstation data disk mount
+- Add GCS Fuse to mount the GCS bucket to the workstation
 
 ## Requirements
 
@@ -69,14 +73,12 @@ Simply run terraform apply.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| project\_id | ID of the project. | `string` | n/a |
-| region | Geographical *region* for Google Cloud Platform. | `string` | n/a |
-| ssh\_pub | User public key for SSH authentication. Confidential, should only be set by environment variable *TF\_VAR\_ssh\_pub* | `string` | n/a |
-| workspace | Core unit of the workstation environment | ```object({ name = string network = object({ base_cidr_block = string desktop_ip = string }) })``` | n/a |
+| user | The user who will have access to the workstation. Requires a **name**, the content of a public **key** for SSH authentication and the public IP address of the user.  The **name** attribute must follow UNIX name standards. the SSH public **key** should be one line and the *ip* attribute should be in the form *X.X.X.X* as standard IPv4. | ```object({ name = string key = string ip = string })``` | n/a |
+| workspace | The workspace that will be created on GCP. Requires a **name**, the ID of a GCP **project** and the **region** of deployment on GCP. The **name** attributes must contain only lowercase letters. | ```object({ name = string project = string region = string })``` | n/a |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| network | Main network characteristics |
+| access\_ips | Public IP addresses to access each service exposed for the workstation. |
 <!-- END_TF_DOCS -->

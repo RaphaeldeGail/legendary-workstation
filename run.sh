@@ -3,8 +3,7 @@ export TF_IN_AUTOMATION="true"
 export TF_INPUT=0
 #export TF_LOG="debug"
 
-export ENV="test"
-export TF_VAR_ssh_pub=$(cat '/home/raphael/.ssh/id_rsa.pub')
+export TF_VAR_user="{ name=\"$USER\", key=\"$(cat /home/$USER/.ssh/id_rsa.pub)\", ip=\"$(curl -s ifconfig.me)\" }"
 
 echo "*start: $(date)"
 
@@ -26,7 +25,7 @@ fi
 echo '*OK (Terraform Documentation)'
 
 echo '*Terraform Init'
-if ! terraform init -reconfigure -no-color -backend-config="bucket=master-bucket-0hw3q17w6a1y30jo"; then
+if ! terraform init -reconfigure -no-color -backend-config='.secrets/config.bucket.tfbackend'; then
     exit 1
 fi
 echo '*OK (Terraform Init)'
@@ -38,30 +37,16 @@ fi
 echo '*OK (Terraform Validate)'
 
 echo '*Terraform Plan'
-if ! terraform plan -no-color -var-file=./environments/$ENV.tfvars -out plan.out; then
+if ! terraform plan -no-color -out plan.out; then
     exit 1
 fi
 echo '*OK (Terraform Plan)'
 
-apply=0
-for action in $(terraform show -json plan.out | jq .resource_changes[].change.actions[])
-do
-    if [ $action != '"no-op"' ];
-    then
-        apply=1
-    fi
-done
-
-if [ $apply == 0 ];
-then
-    echo '*WARNING: no infrastructure modifications are scheduled in this plan!'
-else
-    echo '*Terraform Apply'
-    if ! terraform apply -no-color plan.out; then
-        exit 1
-    fi
-    echo '*OK (Terraform Apply)'
+echo '*Terraform Apply'
+if ! terraform apply -no-color plan.out; then
+    exit 1
 fi
+echo '*OK (Terraform Apply)'
 
 echo "*end: $(date)"
 exit 0

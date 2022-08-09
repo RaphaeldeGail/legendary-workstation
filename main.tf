@@ -33,6 +33,10 @@
  *
  * - Improve variables definition and usage
  * - Build a module to create multiple workstations
+ * - Improve image builds
+ * - Testing the platform
+ * - Improve workstation data disk mount
+ * - Add GCS Fuse to mount the GCS bucket to the workstation
  *
  */
 
@@ -50,8 +54,13 @@ terraform {
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  project = var.workspace.project
+  region  = var.workspace.region
+}
+
+locals {
+  // Default IP address range for the worksapce network
+  base_cidr_block = "10.1.0.0/27"
 }
 
 resource "google_compute_network" "network" {
@@ -68,7 +77,7 @@ resource "google_compute_subnetwork" "subnetwork" {
   description = "Subnetwork hosting workstation instances"
 
   network       = google_compute_network.network.id
-  ip_cidr_range = cidrsubnet(var.workspace.network.base_cidr_block, 2, 0)
+  ip_cidr_range = cidrsubnet(local.base_cidr_block, 2, 0)
 }
 
 resource "google_compute_route" "default_route" {
@@ -102,18 +111,19 @@ module "ssh_service" {
 
   name = "ssh"
 
-  desktop_ip    = var.workspace.network.desktop_ip
-  port          = 22
-  index         = 1
-  compute_image = "bounce-v1658674535-ubuntu-20"
+  desktop_ip = join("/", [var.user.ip, "32"])
+  port       = 22
+  index      = 1
+  // This is an image family
+  compute_image = "bounce-ubuntu-20"
 
   back_network = {
     id              = google_compute_network.network.id
-    base_cidr_block = var.workspace.network.base_cidr_block
+    base_cidr_block = local.base_cidr_block
   }
 
   metadata = {
-    user-data = trimspace(templatefile("./bounce-config.tpl", { ssh_public = var.ssh_pub }))
+    user-data = trimspace(templatefile("./templates/bounce-config.tftpl", { ssh_public = var.user.key, username = var.user.name }))
   }
 }
 
@@ -122,18 +132,19 @@ module "http_service" {
 
   name = "http"
 
-  desktop_ip    = var.workspace.network.desktop_ip
-  port          = 443
-  index         = 2
-  compute_image = "envoy-v1659108720-ubuntu-20"
+  desktop_ip = join("/", [var.user.ip, "32"])
+  port       = 443
+  index      = 2
+  // This is an image family
+  compute_image = "envoy-ubuntu-20"
 
   back_network = {
     id              = google_compute_network.network.id
-    base_cidr_block = var.workspace.network.base_cidr_block
+    base_cidr_block = local.base_cidr_block
   }
 
   metadata = {
-    user-data = trimspace(templatefile("./envoy-config.tpl", {}))
+    user-data = trimspace(templatefile("./templates/envoy-config.tftpl", { workstation_ip = google_compute_instance.workstation.network_interface[0].network_ip }))
   }
 }
 
@@ -150,7 +161,7 @@ resource "google_compute_disk" "data_disk" {
 resource "google_compute_resource_policy" "backup_policy" {
   name = join("-", ["data", "disk", "backup", "policy"])
 
-  region = var.region
+  region = var.workspace.region
   snapshot_schedule_policy {
     schedule {
       daily_schedule {
@@ -223,7 +234,7 @@ resource "google_compute_instance" "workstation" {
   metadata = {
     startup-script         = "mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb; mkdir -p /mnt/disks/diskb; mount -o discard,defaults /dev/sdb /mnt/disks/diskb; chmod a+w /mnt/disks/diskb; echo '/dev/sdb /mnt/disks/diskb ext4 discard,defaults,rw 0 2' >> /etc/fstab"
     block-project-ssh-keys = true
-    ssh-keys               = join(":", ["raphael", trimspace(var.ssh_pub)])
+    ssh-keys               = join(":", [trimspace(var.user.name), trimspace(var.user.key)])
   }
 
 }

@@ -13,8 +13,8 @@ ssh:
   emit_keys_to_console: false
 ## Setup users profiles
 users:
-  - name: raphael
-    primary_group: raphael
+  - name: ${trimspace(username)}
+    primary_group: ${trimspace(username)}
     groups: users
     no_create_home: false
     shell: /bin/bash
