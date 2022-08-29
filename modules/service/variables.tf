@@ -28,6 +28,7 @@ variable "back_network" {
 
 variable "metadata" {
   type        = map(string)
+  default     = {}
   description = "Metadata input for service instances."
 }
 
@@ -43,6 +44,12 @@ variable "compute_image" {
 
 variable "service_account" {
   type        = string
-  description = "Email for the service account bound to the service. Defaults to null."
   default     = null
+  description = "Email for the service account bound to the service. Defaults to null."
+}
+
+variable "project_wide_ssh_keys" {
+  type        = bool
+  default     = false
+  description = "If true, the service instances will allow any SSH keys metadata set at the project level to be added."
 }

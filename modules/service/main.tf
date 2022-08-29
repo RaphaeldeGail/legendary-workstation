@@ -66,7 +66,7 @@ locals {
   // The IP range for the front network
   ip_cidr_range = "172.16.0.0/12"
   // This is the version of the module
-  version   = "1-0-0"
+  version   = "1-1-0"
   name      = lower(var.name)
   template  = [local.name, "v${local.version}", "template"]
   timestamp = tostring(formatdate("YYYYMMDDhhmmss", timestamp()))
@@ -179,7 +179,7 @@ resource "google_compute_instance_template" "main" {
   instance_description = title("Instance based on ${join(" ", concat(local.template, ["build @", local.timestamp]))}")
   machine_type         = "e2-micro"
   can_ip_forward       = true
-  metadata             = merge(var.metadata, { block-project-ssh-keys = true, startup-script = local.startup-script })
+  metadata             = merge(var.metadata, { block-project-ssh-keys = var.project_wide_ssh_keys, startup-script = local.startup-script })
   labels               = local.labels
 
   scheduling {

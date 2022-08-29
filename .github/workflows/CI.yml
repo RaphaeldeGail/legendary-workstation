@@ -67,9 +67,9 @@ jobs:
       - name: Plan infrastructure update
         env:
           TF_VAR_user: ${{ secrets.USER }}
-        run: terraform plan -no-color -out plan.out
+        run: terraform plan -json -no-color -out plan.out #| jq -r '. | select(.type == "change_summary")["@message"]'
       - name: Apply infrastructure update
-        run: terraform apply -no-color plan.out
+        run: terraform apply -json -no-color plan.out #| jq -r '. | select(.type == "change_summary")["@message"]'
   clean:
     runs-on: ubuntu-20.04
     needs: [main]
@@ -98,6 +98,6 @@ jobs:
       - name: Plan infrastructure destroy
         env:
           TF_VAR_user: "{ name=\"aaa\", key=\"\", ip=\"1.1.1.1\" }"
-        run: terraform plan -no-color -destroy -out destroy.out
+        run: terraform plan -json -no-color -destroy -out destroy.out #| jq -r '. | select(.type == "change_summary")["@message"]'
       - name: Apply infrastructure destruction
-        run: terraform apply -no-color destroy.out
+        run: terraform apply -json -no-color destroy.out #| jq -r '. | select(.type == "change_summary")["@message"]'
