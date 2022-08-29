@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
 # Legendary Workstation
 
-This code sets up a plateform for managing a development environment in Google Cloud, similar to a local environment (local virtual machine)
+This code sets up a plateform for managing a development environment in Google Cloud, similar to a local environment (local virtual machine).
 
 ## Infrastructure description
 
@@ -27,7 +27,12 @@ Set the values of the required variables in terraform.tfvars and set the name of
 
 Authenticate to Google Cloud Platform with a relevant account or set the environment variable *GOOGLE\_APPLICATION\_CREDENTIALS* to the path of a JSON service account key.
 
-Simply run terraform apply.
+Simply run:
+
+```bash
+terraform init
+terraform apply
+```
 
 ## Upcoming features
 

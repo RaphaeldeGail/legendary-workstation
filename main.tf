@@ -1,7 +1,7 @@
 /**
  * # Legendary Workstation
  * 
- * This code sets up a plateform for managing a development environment in Google Cloud, similar to a local environment (local virtual machine)
+ * This code sets up a plateform for managing a development environment in Google Cloud, similar to a local environment (local virtual machine).
  * 
  * ## Infrastructure description
  *
@@ -27,16 +27,21 @@
  *
  * Authenticate to Google Cloud Platform with a relevant account or set the environment variable *GOOGLE_APPLICATION_CREDENTIALS* to the path of a JSON service account key.
  *
- * Simply run terraform apply.
+ * Simply run:
+ *
+ * ```bash
+ * terraform init
+ * terraform apply
+ * ```
  *
  * ## Upcoming features
  *
- * - Improve variables definition and usage
- * - Build a module to create multiple workstations
- * - Improve image builds
- * - Testing the platform
- * - Improve workstation data disk mount
- * - Add GCS Fuse to mount the GCS bucket to the workstation
+ * - Improve variables definition and usage [X]
+ * - Build a module to create multiple workstations []
+ * - Improve image builds [X]
+ * - Testing the platform []
+ * - Improve workstation data disk mount []
+ * - Add GCS Fuse to mount the GCS bucket to the workstation []
  *
  */
 
@@ -115,15 +120,11 @@ module "ssh_service" {
   port       = 22
   index      = 1
   // This is an image family
-  compute_image = "bounce-ubuntu-20"
+  compute_image = "bounce-debian-11"
 
   back_network = {
     id              = google_compute_network.network.id
     base_cidr_block = local.base_cidr_block
-  }
-
-  metadata = {
-    user-data = trimspace(templatefile("./templates/bounce-config.tftpl", { ssh_public = var.user.key, username = var.user.name }))
   }
 }
 
@@ -136,15 +137,11 @@ module "http_service" {
   port       = 443
   index      = 2
   // This is an image family
-  compute_image = "envoy-ubuntu-20"
+  compute_image = "envoy-debian-11"
 
   back_network = {
     id              = google_compute_network.network.id
     base_cidr_block = local.base_cidr_block
-  }
-
-  metadata = {
-    user-data = trimspace(templatefile("./templates/envoy-config.tftpl", { workstation_ip = google_compute_instance.workstation.network_interface[0].network_ip }))
   }
 }
 

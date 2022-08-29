@@ -91,9 +91,10 @@ No modules.
 | compute\_image | The compute image family to build instance from, for this service. | `string` | n/a |
 | desktop\_ip | Public IP address of the desktop to connect to the workstation. | `string` | n/a |
 | index | A global index of the service which may not repeat itself among different instanciation. | `number` | n/a |
-| metadata | Metadata input for service instances. | `map(string)` | n/a |
+| metadata | Metadata input for service instances. | `map(string)` | `{}` |
 | name | Name of the service. It may be the name of a protocol (HTTP) or any name. May only contains lowercase letters. | `string` | n/a |
 | port | Port number for service to expose. Should be related to the protocol (HTTP, SSH). | `number` | n/a |
+| project\_wide\_ssh\_keys | If true, the service instances will allow any SSH keys metadata set at the project level to be added. | `bool` | `false` |
 | service\_account | Email for the service account bound to the service. Defaults to null. | `string` | `null` |
 
 ## Outputs
