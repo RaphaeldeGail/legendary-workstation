@@ -36,12 +36,12 @@ terraform apply
 
 ## Upcoming features
 
-- Improve variables definition and usage
-- Build a module to create multiple workstations
-- Improve image builds
-- Testing the platform
-- Improve workstation data disk mount
-- Add GCS Fuse to mount the GCS bucket to the workstation
+- Improve variables definition and usage [X]
+- Build a module to create multiple workstations []
+- Improve image builds [X]
+- Testing the platform []
+- Improve workstation data disk mount []
+- Add GCS Fuse to mount the GCS bucket to the workstation []
 
 ## Requirements
 
