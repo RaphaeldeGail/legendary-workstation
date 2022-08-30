@@ -270,8 +270,8 @@ resource "google_compute_instance_group_manager" "main" {
 
   base_instance_name = join("-", [local.name, local.version, "service", data.google_compute_zones.available.names[count.index]])
   zone               = data.google_compute_zones.available.names[count.index]
-  target_pools = [count.index == 0 ? google_compute_target_pool.failover.id : google_compute_target_pool.default.id]
-  target_size  = 1
+  target_pools       = [count.index == 0 ? google_compute_target_pool.failover.id : google_compute_target_pool.default.id]
+  target_size        = 1
 
   version {
     name              = join("-", [local.version, local.timestamp])
@@ -328,11 +328,11 @@ resource "google_compute_target_pool" "default" {
 }
 
 resource "google_compute_address" "default" {
-  name = join("-", [local.name, "frontend", "ipaddress"])
+  name        = join("-", [local.name, "frontend", "ipaddress"])
   description = "The IP address for the frontend service ${local.name} in IPV4 format"
 
   address_type = "EXTERNAL"
-  network_tier          = "PREMIUM"
+  network_tier = "PREMIUM"
 }
 
 resource "google_compute_forwarding_rule" "front_loadbalancer" {
