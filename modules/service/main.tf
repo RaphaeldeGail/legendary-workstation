@@ -350,6 +350,43 @@ resource "google_compute_forwarding_rule" "front_loadbalancer" {
   network_tier          = "PREMIUM"
 }
 
-resource "google_monitoring_dashboard" "dashboard" {
+resource "google_monitoring_dashboard" "default" {
   dashboard_json = templatefile("${path.module}/dashboard.tftpl", { name = local.name, forwarding_rule_name = google_compute_forwarding_rule.front_loadbalancer[0].name, local_network = google_compute_network.front_network.name })
+}
+
+data "google_monitoring_notification_channel" "default" {
+  display_name = "ALERT on workspace Lab v1"
+}
+
+resource "google_monitoring_alert_policy" "default" {
+  display_name = json(" ", [upper(local.name), "Service", "instances", "egress", "blockade"])
+
+  combiner              = "OR"
+  enabled               = true
+  notification_channels = [data.google_monitoring_notification_channel.default.name]
+  user_labels           = local.labels
+
+  alert_strategy {
+    auto_close = "3600s"
+  }
+
+  conditions {
+    display_name = "VM Instance - Egress bytes - below 0.01B"
+
+    condition_threshold {
+      filter          = "resource.type = \"gce_instance\" AND metric.type = \"networking.googleapis.com/vm_flow/egress_bytes_count\" AND metric.labels.local_network = \"${google_compute_network.front_network.name}\""
+      duration        = "0s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0.01
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_MEAN"
+      }
+
+      trigger {
+        percent = 100
+      }
+    }
+  }
 }
