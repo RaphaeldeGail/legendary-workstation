@@ -359,7 +359,7 @@ data "google_monitoring_notification_channel" "default" {
 }
 
 resource "google_monitoring_alert_policy" "default" {
-  display_name = json(" ", [upper(local.name), "Service", "instances", "egress", "blockade"])
+  display_name = title(join(" ", [upper(local.name), "service", "instances", "egress", "blockade"]))
 
   combiner              = "OR"
   enabled               = true
