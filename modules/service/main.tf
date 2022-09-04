@@ -349,3 +349,7 @@ resource "google_compute_forwarding_rule" "front_loadbalancer" {
   target                = google_compute_target_pool.default.id
   network_tier          = "PREMIUM"
 }
+
+resource "google_monitoring_dashboard" "dashboard" {
+  dashboard_json = templatefile("dashboard.tftpl", { name=local.name, forwarding_rule_name=google_compute_forwarding_rule.front_loadbalancer.name, local_network=google_compute_network.front_network.name })
+}
