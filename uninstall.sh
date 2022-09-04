@@ -14,13 +14,13 @@ fi
 echo '*OK (Terraform Validate)'
 
 echo '*Terraform Plan'
-if ! terraform plan -json -destroy -no-color -out plan.out | jq -r '. | select(.type == "change_summary")["@message"]'; then
+if ! terraform plan -json -destroy -no-color -out plan.out | jq -r '. | select(.type == "diagnostic" or .type == "change_summary" or .type == "planned_change")["@message"]'; then
     exit 1
 fi
 echo '*OK (Terraform Plan)'
 
 echo '*Terraform Apply'
-if ! terraform apply -json -no-color plan.out | jq -r '. | select(.type == "change_summary")["@message"]'; then
+if ! terraform apply -json -no-color plan.out | jq -r '. | select(.type == "diagnostic" or .type == "change_summary" or .type == "planned_change")["@message"]'; then
     exit 1
 fi
 echo '*OK (Terraform Apply)'

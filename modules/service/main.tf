@@ -151,8 +151,12 @@ data "google_netblock_ip_ranges" "legacy_healthcheck" {
   range_type = "legacy-health-checkers"
 }
 
+data "google_netblock_ip_ranges" "service_healthcheck" {
+  range_type = "health-checkers"
+}
+
 resource "google_compute_firewall" "legacy_healthcheck" {
-  name        = join("-", ["allow", "from", "healthchecks", "to", local.name, "tcp", tostring(80)])
+  name        = join("-", ["allow", "from", "legacy", "healthchecks", "to", local.name, "tcp", tostring(80)])
   description = "Allow HTTP requests from Google healthchecks to ${local.name} service instances"
   network     = google_compute_network.front_network.id
   direction   = "INGRESS"
@@ -164,6 +168,22 @@ resource "google_compute_firewall" "legacy_healthcheck" {
   }
 
   source_ranges = data.google_netblock_ip_ranges.legacy_healthcheck.cidr_blocks_ipv4
+  target_tags   = [local.name]
+}
+
+resource "google_compute_firewall" "healthcheck" {
+  name        = join("-", ["allow", "from", "service", "healthchecks", "to", local.name, "tcp", tostring(80)])
+  description = "Allow Google healthchecks to ${local.name} service instances"
+  network     = google_compute_network.front_network.id
+  direction   = "INGRESS"
+  priority    = 100
+
+  allow {
+    protocol = "tcp"
+    ports    = [tostring(var.port)]
+  }
+
+  source_ranges = data.google_netblock_ip_ranges.service_healthcheck.cidr_blocks_ipv4
   target_tags   = [local.name]
 }
 
@@ -227,6 +247,21 @@ resource "google_compute_instance_template" "main" {
 data "google_compute_zones" "available" {
 }
 
+resource "google_compute_health_check" "auto_healing" {
+  name        = join("-", [local.name, "service", "autohealing"])
+  description = "Auto healing health check via tcp for service instances ${local.name} ${local.version}"
+
+  timeout_sec         = 1
+  check_interval_sec  = 1
+  healthy_threshold   = 4
+  unhealthy_threshold = 5
+
+  tcp_health_check {
+    port               = var.port
+    port_specification = "USE_FIXED_PORT"
+  }
+}
+
 resource "google_compute_instance_group_manager" "main" {
   count = min(length(data.google_compute_zones.available.names), 2)
 
@@ -235,17 +270,31 @@ resource "google_compute_instance_group_manager" "main" {
 
   base_instance_name = join("-", [local.name, local.version, "service", data.google_compute_zones.available.names[count.index]])
   zone               = data.google_compute_zones.available.names[count.index]
+  target_pools       = [count.index == 0 ? google_compute_target_pool.failover.id : google_compute_target_pool.default.id]
+  target_size        = 1
 
   version {
+    name              = join("-", [local.version, local.timestamp])
     instance_template = google_compute_instance_template.main.id
   }
 
-  target_pools = [count.index == 0 ? google_compute_target_pool.failover.id : google_compute_target_pool.default.id]
-  target_size  = 1
+  auto_healing_policies {
+    health_check      = google_compute_health_check.auto_healing.id
+    initial_delay_sec = 30
+  }
+
+  update_policy {
+    type                           = "PROACTIVE"
+    minimal_action                 = "RESTART"
+    most_disruptive_allowed_action = "REPLACE"
+    max_surge_fixed                = 2
+    max_unavailable_fixed          = 1
+    replacement_method             = "SUBSTITUTE"
+  }
 }
 
-resource "google_compute_http_health_check" "default" {
-  name        = join("-", [local.name, "http", "healthcheck"])
+resource "google_compute_http_health_check" "loadbalancer_healthcheck" {
+  name        = join("-", [local.name, "loadbalancer", "healthcheck"])
   description = "Legacy HTTP healthcheck used by network load balancer for service ${local.name}"
 
   port               = 80
@@ -261,7 +310,7 @@ resource "google_compute_target_pool" "failover" {
   instances        = null
   session_affinity = "CLIENT_IP"
   health_checks = [
-    google_compute_http_health_check.default.name,
+    google_compute_http_health_check.loadbalancer_healthcheck.name,
   ]
 }
 
@@ -272,10 +321,18 @@ resource "google_compute_target_pool" "default" {
   instances        = null
   session_affinity = "CLIENT_IP"
   health_checks = [
-    google_compute_http_health_check.default.name,
+    google_compute_http_health_check.loadbalancer_healthcheck.name,
   ]
   backup_pool    = google_compute_target_pool.failover.self_link
   failover_ratio = 0.5
+}
+
+resource "google_compute_address" "default" {
+  name        = join("-", [local.name, "frontend", "ipaddress"])
+  description = "The IP address for the frontend service ${local.name} in IPV4 format"
+
+  address_type = "EXTERNAL"
+  network_tier = "PREMIUM"
 }
 
 resource "google_compute_forwarding_rule" "front_loadbalancer" {
@@ -285,9 +342,51 @@ resource "google_compute_forwarding_rule" "front_loadbalancer" {
   description = "Load balancer for service ${local.name}"
 
   labels                = local.labels
+  ip_address            = google_compute_address.default.id
   ip_protocol           = "TCP"
   load_balancing_scheme = "EXTERNAL"
   port_range            = tostring(var.port)
   target                = google_compute_target_pool.default.id
   network_tier          = "PREMIUM"
+}
+
+resource "google_monitoring_dashboard" "default" {
+  dashboard_json = templatefile("${path.module}/dashboard.tftpl", { name = local.name, forwarding_rule_name = google_compute_forwarding_rule.front_loadbalancer[0].name, local_network = google_compute_network.front_network.name })
+}
+
+data "google_monitoring_notification_channel" "default" {
+  display_name = "ALERT on workspace Lab v1"
+}
+
+resource "google_monitoring_alert_policy" "default" {
+  display_name = title(join(" ", [upper(local.name), "service", "instances", "egress", "blockade"]))
+
+  combiner              = "OR"
+  enabled               = true
+  notification_channels = [data.google_monitoring_notification_channel.default.name]
+  user_labels           = local.labels
+
+  alert_strategy {
+    auto_close = "3600s"
+  }
+
+  conditions {
+    display_name = "VM Instance - Egress bytes - below 0.01B"
+
+    condition_threshold {
+      filter          = "resource.type = \"gce_instance\" AND metric.type = \"networking.googleapis.com/vm_flow/egress_bytes_count\" AND metric.labels.local_network = \"${google_compute_network.front_network.name}\""
+      duration        = "0s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0.01
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_MEAN"
+      }
+
+      trigger {
+        percent = 100
+      }
+    }
+  }
 }
