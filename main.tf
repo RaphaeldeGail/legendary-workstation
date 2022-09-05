@@ -39,8 +39,8 @@
  * - Improve variables definition and usage [X]
  * - Build a module to create multiple workstations []
  * - Improve image builds [X]
- * - Testing the platform []
- * - Improve workstation data disk mount []
+ * - Testing the platform [X]
+ * - Improve workstation data disk mount [X]
  * - Add GCS Fuse to mount the GCS bucket to the workstation []
  *
  */
@@ -229,9 +229,8 @@ resource "google_compute_instance" "workstation" {
   }
 
   metadata = {
-    startup-script         = "mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb; mkdir -p /mnt/disks/diskb; mount -o discard,defaults /dev/sdb /mnt/disks/diskb; chmod a+w /mnt/disks/diskb; echo '/dev/sdb /mnt/disks/diskb ext4 discard,defaults,rw 0 2' >> /etc/fstab"
+    startup-script         = "mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb; mkdir -p /mnt/data; mount -o discard,defaults /dev/sdb /mnt/data; chmod a+w /mnt/data; echo '/dev/sdb /mnt/data ext4 discard,defaults,rw 0 2' >> /etc/fstab"
     block-project-ssh-keys = true
     ssh-keys               = join(":", [trimspace(var.user.name), trimspace(var.user.key)])
   }
-
 }

@@ -274,7 +274,7 @@ resource "google_compute_instance_group_manager" "main" {
   target_size        = 1
 
   version {
-    name              = join("-", [local.version, local.timestamp])
+    name              = local.version
     instance_template = google_compute_instance_template.main.id
   }
 
@@ -376,7 +376,7 @@ resource "google_monitoring_alert_policy" "default" {
     condition_threshold {
       filter          = "resource.type = \"gce_instance\" AND metric.type = \"networking.googleapis.com/vm_flow/egress_bytes_count\" AND metric.labels.local_network = \"${google_compute_network.front_network.name}\""
       duration        = "0s"
-      comparison      = "COMPARISON_GT"
+      comparison      = "COMPARISON_LT"
       threshold_value = 0.01
 
       aggregations {

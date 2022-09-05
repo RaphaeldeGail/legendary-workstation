@@ -39,8 +39,8 @@ terraform apply
 - Improve variables definition and usage [X]
 - Build a module to create multiple workstations []
 - Improve image builds [X]
-- Testing the platform []
-- Improve workstation data disk mount []
+- Testing the platform [X]
+- Improve workstation data disk mount [X]
 - Add GCS Fuse to mount the GCS bucket to the workstation []
 
 ## Requirements
