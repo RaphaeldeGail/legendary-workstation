@@ -20,7 +20,7 @@ fi
 echo '*OK (Terraform Plan)'
 
 echo '*Terraform Apply'
-if ! terraform apply -json -no-color plan.out | jq -r '. | select(.type == "diagnostic" or .type == "change_summary" or .type == "planned_change")["@message"]'; then
+if ! terraform apply -json -no-color plan.out | jq -r '. | select(.type == "diagnostic" or .type == "change_summary" or .type == "apply_complete")["@message"]'; then
     exit 1
 fi
 echo '*OK (Terraform Apply)'
