@@ -3,7 +3,10 @@
 
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| terraform | ~> 1.1.2 |
+| google | >= 4.30.0 |
 
 ## Modules
 
@@ -20,12 +23,14 @@ No modules.
 | [google_service_account.bucket_service_account](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [google_storage_bucket.shared_bucket](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket) | resource |
 | [google_storage_bucket_iam_member.shared_bucket_member](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_iam_member) | resource |
+| [random_id.bucket_id](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) | resource |
+| [google_compute_zones.available](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_zones) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| subnet\_id | The ID of thesubnetwork to which the workstation will be bound. | `string` | n/a |
+| subnet\_id | The ID of the subnetwork to which the workstation will be bound. | `string` | n/a |
 | userkey | SSH public key of the user that will inherit the workstation. | `string` | n/a |
 | username | Name of the user that will inherit the workstation. May only contains lowercase letters. | `string` | n/a |
 | workspacename | The name of the workspace to which the workstation will belong. | `string` | n/a |

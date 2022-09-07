@@ -20,5 +20,5 @@ variable "workspacename" {
 
 variable "subnet_id" {
   type        = string
-  description = "The ID of thesubnetwork to which the workstation will be bound."
+  description = "The ID of the subnetwork to which the workstation will be bound."
 }

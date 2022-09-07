@@ -68,7 +68,7 @@ package_update: true
 
 mounts:
   # uid 1001 is the first user created by Google while gid 1001 stands for the "google-sudoers" group
-  - ["shared-bucket-1605", "/mnt", "gcsfuse", "rw,x-systemd.requires=network-online.target,allow_other,uid=1001,gid=1001", "0", "2"]
+  - ["${bucket}", "/mnt", "gcsfuse", "rw,x-systemd.requires=network-online.target,allow_other,uid=1001,gid=1001", "0", "2"]
 
 runcmd:
-  - mount -t gcsfuse -o rw,x-systemd.requires=network-online.target,allow_other,uid=1001,gid=1001 shared-bucket-1605 /mnt
+  - mount -t gcsfuse -o rw,x-systemd.requires=network-online.target,allow_other,uid=1001,gid=1001 ${bucket} /mnt

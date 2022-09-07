@@ -3,27 +3,43 @@
  *
  *
  */
+terraform {
+  required_version = "~> 1.1.2"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 4.30.0"
+    }
+  }
+}
+
+locals {
+  // This is the version of the module
+  version = "1-0-0"
+}
+
+data "google_compute_zones" "available" {
+}
 
 resource "google_compute_disk" "boot_disk" {
   name        = join("-", [var.username, "boot", "disk"])
   description = "Boot disk for the workstation of ${var.username}"
 
   image                     = "ubuntu-2004-lts"
-  size                      = 10
+  size                      = 100
   type                      = "pd-standard"
   physical_block_size_bytes = 4096
-  zone                      = "europe-west1-b"
+  zone                      = data.google_compute_zones.available.names[0]
 }
 
 resource "google_compute_resource_policy" "backup_policy" {
-  name = join("-", [var.username, "boot", "disk", "backup", "policy"])
+  name = join("-", [var.username, "backup", "policy"])
 
-  #region = var.workspace.region
   snapshot_schedule_policy {
     schedule {
       daily_schedule {
         days_in_cycle = 1
-        start_time    = "15:00"
+        start_time    = "19:00"
       }
     }
   }
@@ -32,17 +48,21 @@ resource "google_compute_resource_policy" "backup_policy" {
 resource "google_compute_disk_resource_policy_attachment" "backup_policy_attachment" {
   name = google_compute_resource_policy.backup_policy.name
   disk = google_compute_disk.boot_disk.name
-  zone = "europe-west1-b"
+  zone = data.google_compute_zones.available.names[0]
 }
 
 resource "google_service_account" "bucket_service_account" {
-  account_id   = join("-", [var.username, "account"])
+  account_id   = join("-", [var.username, "service", "account"])
   description  = "Service account for ${var.username} workstation"
   display_name = "Workstation account"
 }
 
+resource "random_id" "bucket_id" {
+  byte_length = 4
+}
+
 resource "google_storage_bucket" "shared_bucket" {
-  name = join("-", [var.username, "bucket", "1605"])
+  name = join("-", [var.username, "bucket", tostring(random_id.bucket_id.dec)])
 
   location                    = "EU"
   force_destroy               = true
@@ -60,9 +80,9 @@ resource "google_compute_instance" "workstation" {
   name        = join("-", [var.username, "workstation"])
   description = "Workstation instance for ${var.username}"
 
-  zone           = "europe-west1-b"
+  zone           = data.google_compute_zones.available.names[0]
   tags           = [var.workspacename]
-  machine_type   = "e2-small"
+  machine_type   = "e2-medium"
   can_ip_forward = false
 
   service_account {
@@ -71,8 +91,10 @@ resource "google_compute_instance" "workstation" {
   }
 
   scheduling {
-    preemptible       = true
-    automatic_restart = false
+    provisioning_model  = "STANDARD"
+    on_host_maintenance = "MIGRATE"
+    preemptible         = false
+    automatic_restart   = true
   }
 
   boot_disk {
@@ -89,6 +111,6 @@ resource "google_compute_instance" "workstation" {
   metadata = {
     block-project-ssh-keys = true
     ssh-keys               = join(":", [trimspace(var.username), trimspace(var.userkey)])
-    user-data              = file("${path.module}/cloud-config.yaml")
+    user-data              = templatefile("${path.module}/cloud-config.yaml.tftpl", { bucket = google_storage_bucket.shared_bucket.name })
   }
 }
