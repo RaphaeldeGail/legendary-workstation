@@ -41,7 +41,7 @@
  * - Improve image builds [X]
  * - Testing the platform [X]
  * - Improve workstation data disk mount [X]
- * - Add GCS Fuse to mount the GCS bucket to the workstation []
+ * - Add GCS Fuse to mount the GCS bucket to the workstation [X]
  *
  */
 
@@ -145,10 +145,11 @@ module "http_service" {
   }
 }
 
-resource "google_compute_disk" "data_disk" {
-  name        = "workstation-data-disk"
-  description = "Supplementary data disk for the workstation"
+resource "google_compute_disk" "boot_disk" {
+  name        = "workstation-boot-disk"
+  description = "Boot disk for the workstation"
 
+  image                     = "ubuntu-2004-lts"
   size                      = 10
   type                      = "pd-standard"
   physical_block_size_bytes = 4096
@@ -156,7 +157,7 @@ resource "google_compute_disk" "data_disk" {
 }
 
 resource "google_compute_resource_policy" "backup_policy" {
-  name = join("-", ["data", "disk", "backup", "policy"])
+  name = join("-", ["boot", "disk", "backup", "policy"])
 
   region = var.workspace.region
   snapshot_schedule_policy {
@@ -171,7 +172,7 @@ resource "google_compute_resource_policy" "backup_policy" {
 
 resource "google_compute_disk_resource_policy_attachment" "backup_policy_attachment" {
   name = google_compute_resource_policy.backup_policy.name
-  disk = google_compute_disk.data_disk.name
+  disk = google_compute_disk.boot_disk.name
   zone = "europe-west1-b"
 }
 
@@ -205,22 +206,20 @@ resource "google_compute_instance" "workstation" {
   machine_type   = "e2-small"
   can_ip_forward = false
 
+  service_account {
+    email  = google_service_account.bucket_service_account.email
+    scopes = ["cloud-platform"]
+  }
+
   scheduling {
     preemptible       = true
     automatic_restart = false
   }
 
   boot_disk {
-    initialize_params {
-      image = "ubuntu-2004-lts"
-      size  = 10
-    }
-    auto_delete = true
-  }
-
-  attached_disk {
-    source      = google_compute_disk.data_disk.id
-    device_name = "data-disk"
+    device_name = google_compute_disk.boot_disk.name
+    source      = google_compute_disk.boot_disk.id
+    auto_delete = false
     mode        = "READ_WRITE"
   }
 
@@ -229,8 +228,8 @@ resource "google_compute_instance" "workstation" {
   }
 
   metadata = {
-    startup-script         = "mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb; mkdir -p /mnt/data; mount -o discard,defaults /dev/sdb /mnt/data; chmod a+w /mnt/data; echo '/dev/sdb /mnt/data ext4 discard,defaults,rw 0 2' >> /etc/fstab"
     block-project-ssh-keys = true
     ssh-keys               = join(":", [trimspace(var.user.name), trimspace(var.user.key)])
+    user-data              = file("cloud-config.yaml")
   }
 }

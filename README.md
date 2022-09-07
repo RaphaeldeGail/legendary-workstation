@@ -41,7 +41,7 @@ terraform apply
 - Improve image builds [X]
 - Testing the platform [X]
 - Improve workstation data disk mount [X]
-- Add GCS Fuse to mount the GCS bucket to the workstation []
+- Add GCS Fuse to mount the GCS bucket to the workstation [X]
 
 ## Requirements
 
@@ -61,7 +61,7 @@ terraform apply
 
 | Name | Type |
 |------|------|
-| [google_compute_disk.data_disk](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk) | resource |
+| [google_compute_disk.boot_disk](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk) | resource |
 | [google_compute_disk_resource_policy_attachment.backup_policy_attachment](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk_resource_policy_attachment) | resource |
 | [google_compute_instance.workstation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance) | resource |
 | [google_compute_network.network](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network) | resource |
@@ -85,5 +85,5 @@ terraform apply
 
 | Name | Description |
 |------|-------------|
-| access\_ips | Public IP addresses to access each service exposed for the workstation. |
+| access\_hosts | FQDN to access each service exposed for the workstation. |
 <!-- END_TF_DOCS -->
