@@ -14,11 +14,11 @@ variable "userkey" {
 }
 
 variable "workspacename" {
-    type = string
-    description = "The name of the workspace to which the workstation will belong."
+  type        = string
+  description = "The name of the workspace to which the workstation will belong."
 }
 
 variable "subnet_id" {
-    type = string
-    description = "The ID of thesubnetwork to which the workstation will be bound."
+  type        = string
+  description = "The ID of thesubnetwork to which the workstation will be bound."
 }
