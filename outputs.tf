@@ -1,7 +1,7 @@
-output "access_ips" {
+output "access_hosts" {
   value = {
-    ssh  = module.ssh_service.external_lb_address,
-    http = module.http_service.external_lb_address
+    ssh  = module.ssh_service.external_lb_name,
+    http = module.http_service.external_lb_name
   }
-  description = "Public IP addresses to access each service exposed for the workstation."
+  description = "FQDN to access each service exposed for the workstation."
 }

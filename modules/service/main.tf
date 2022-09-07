@@ -335,6 +335,19 @@ resource "google_compute_address" "default" {
   network_tier = "PREMIUM"
 }
 
+data "google_dns_managed_zone" "dns_zone" {
+  name = "lab-wansho-fr"
+}
+
+resource "google_dns_record_set" "frontend_dn" {
+  name = "${local.name}-access.${data.google_dns_managed_zone.dns_zone.dns_name}"
+
+  type         = "A"
+  ttl          = 300
+  managed_zone = data.google_dns_managed_zone.dns_zone.name
+  rrdatas      = [google_compute_address.default.address]
+}
+
 resource "google_compute_forwarding_rule" "front_loadbalancer" {
   count = min(length(data.google_compute_zones.available.names), 1)
 
