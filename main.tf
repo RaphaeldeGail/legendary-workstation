@@ -37,7 +37,7 @@
  * ## Upcoming features
  *
  * - Improve variables definition and usage [X]
- * - Build a module to create multiple workstations []
+ * - Build a module to create multiple workstations [X]
  * - Improve image builds [X]
  * - Testing the platform [X]
  * - Improve workstation data disk mount [X]
@@ -145,91 +145,11 @@ module "http_service" {
   }
 }
 
-resource "google_compute_disk" "boot_disk" {
-  name        = "workstation-boot-disk"
-  description = "Boot disk for the workstation"
+module "workstation" {
+  source = "./modules/workstation"
 
-  image                     = "ubuntu-2004-lts"
-  size                      = 10
-  type                      = "pd-standard"
-  physical_block_size_bytes = 4096
-  zone                      = "europe-west1-b"
-}
-
-resource "google_compute_resource_policy" "backup_policy" {
-  name = join("-", ["boot", "disk", "backup", "policy"])
-
-  region = var.workspace.region
-  snapshot_schedule_policy {
-    schedule {
-      daily_schedule {
-        days_in_cycle = 1
-        start_time    = "15:00"
-      }
-    }
-  }
-}
-
-resource "google_compute_disk_resource_policy_attachment" "backup_policy_attachment" {
-  name = google_compute_resource_policy.backup_policy.name
-  disk = google_compute_disk.boot_disk.name
-  zone = "europe-west1-b"
-}
-
-resource "google_service_account" "bucket_service_account" {
-  account_id   = "workstation-account"
-  description  = "Service account for the workstation"
-  display_name = "Workstation account"
-}
-
-resource "google_storage_bucket" "shared_bucket" {
-  name = "shared-bucket-1605"
-
-  location                    = "EU"
-  force_destroy               = true
-  storage_class               = "STANDARD"
-  uniform_bucket_level_access = true
-}
-
-resource "google_storage_bucket_iam_member" "shared_bucket_member" {
-  bucket = google_storage_bucket.shared_bucket.name
-  role   = "roles/storage.objectAdmin"
-  member = join(":", ["serviceAccount", google_service_account.bucket_service_account.email])
-}
-
-resource "google_compute_instance" "workstation" {
-  name        = "workstation"
-  description = "Workstation instance"
-
-  zone           = "europe-west1-b"
-  tags           = [var.workspace.name]
-  machine_type   = "e2-small"
-  can_ip_forward = false
-
-  service_account {
-    email  = google_service_account.bucket_service_account.email
-    scopes = ["cloud-platform"]
-  }
-
-  scheduling {
-    preemptible       = true
-    automatic_restart = false
-  }
-
-  boot_disk {
-    device_name = google_compute_disk.boot_disk.name
-    source      = google_compute_disk.boot_disk.id
-    auto_delete = false
-    mode        = "READ_WRITE"
-  }
-
-  network_interface {
-    subnetwork = google_compute_subnetwork.subnetwork.id
-  }
-
-  metadata = {
-    block-project-ssh-keys = true
-    ssh-keys               = join(":", [trimspace(var.user.name), trimspace(var.user.key)])
-    user-data              = file("cloud-config.yaml")
-  }
-}
+  username      = var.user.name
+  userkey       = var.user.key
+  workspacename = var.workspace.name
+  subnet_id     = google_compute_subnetwork.subnetwork.id
+} 
