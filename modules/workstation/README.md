@@ -1,6 +1,39 @@
 <!-- BEGIN_TF_DOCS -->
 # Workstation
 
+This module creates a workstation for development needs, with a backup policy of the workstation disk and a GCS bucket mounted on the workstation for sharing files.
+
+## Infrastructure description
+
+The module creates an instance with a boot disk (OS ubuntu 20.04).
+
+The boot disk has a backup policy for recovery
+
+A GCS bucket is also created and the workstation is equiped with GCSfuse libraries in order to mount it as a local filesystem.
+
+The service account bound to the workstation has specific read/write access to the bucket.
+
+The user of the workstation can then easily share items with the workstation by using the GCS interface and the local filesystem.
+
+## Usage
+
+Simply call the module as:
+
+```hcl
+module "workstation" {
+ source = "./modules/workstation"
+
+ username      = var.user.name
+ userkey       = var.user.key
+ workspacename = var.workspace.name
+ subnet_id     = google_compute_subnetwork.subnetwork.id
+}
+```
+
+## Versioning
+
+The local.version variable represents the version of the module.
+
 ## Requirements
 
 | Name | Version |

@@ -21,7 +21,9 @@ The gateways are exposed behind Layer 4 loadbalancers.
 
 Before building the platform, you should build your own image for SSH and HTTP gateways with packer.
 
-Please refer to the documentation in the packer directory.
+Please refer to the documentation in the following repositories:
+[SSH](https://github.com/RaphaeldeGail/redesigned-bounce-image) and
+[HTTP](https://github.com/RaphaeldeGail/vigilant-envoy-image)
 
 Set the values of the required variables in terraform.tfvars and set the name of the images you built with packer in the main code.
 
@@ -33,15 +35,6 @@ Simply run:
 terraform init
 terraform apply
 ```
-
-## Upcoming features
-
-- Improve variables definition and usage [X]
-- Build a module to create multiple workstations [X]
-- Improve image builds [X]
-- Testing the platform [X]
-- Improve workstation data disk mount [X]
-- Add GCS Fuse to mount the GCS bucket to the workstation [X]
 
 ## Requirements
 

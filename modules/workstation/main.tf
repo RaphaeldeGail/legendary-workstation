@@ -1,6 +1,38 @@
 /**
  * # Workstation
  *
+ * This module creates a workstation for development needs, with a backup policy of the workstation disk and a GCS bucket mounted on the workstation for sharing files.
+ *
+ * ## Infrastructure description
+ *
+ * The module creates an instance with a boot disk (OS ubuntu 20.04).
+ *
+ * The boot disk has a backup policy for recovery
+ *
+ * A GCS bucket is also created and the workstation is equiped with GCSfuse libraries in order to mount it as a local filesystem.
+ *
+ * The service account bound to the workstation has specific read/write access to the bucket.
+ *
+ * The user of the workstation can then easily share items with the workstation by using the GCS interface and the local filesystem.
+ *
+ * ## Usage
+ *
+ * Simply call the module as:
+ *
+ * ```hcl
+ * module "workstation" {
+ *  source = "./modules/workstation"
+ *
+ *  username      = var.user.name
+ *  userkey       = var.user.key
+ *  workspacename = var.workspace.name
+ *  subnet_id     = google_compute_subnetwork.subnetwork.id
+ * } 
+ * ```
+ *
+ * ## Versioning
+ *
+ * The local.version variable represents the version of the module.
  *
  */
 terraform {
@@ -54,7 +86,7 @@ resource "google_compute_disk_resource_policy_attachment" "backup_policy_attachm
 resource "google_service_account" "bucket_service_account" {
   account_id   = join("-", [var.username, "service", "account"])
   description  = "Service account for ${var.username} workstation"
-  display_name = "Workstation account"
+  display_name = "${title(var.username)} workstation account"
 }
 
 resource "random_id" "bucket_id" {

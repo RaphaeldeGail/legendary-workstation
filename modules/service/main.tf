@@ -36,7 +36,7 @@
  *  }
  *
  *  metadata       = {
- *    user-data       = trimspace(templatefile("./envoy-config.tpl", {}))
+ *    user-data       = file("./envoy-config.tpl")
  *  }
  * }
  * ```
@@ -336,7 +336,7 @@ resource "google_compute_address" "default" {
 }
 
 data "google_dns_managed_zone" "dns_zone" {
-  name = "lab-wansho-fr"
+  name = var.dns_zone
 }
 
 resource "google_dns_record_set" "frontend_dn" {
@@ -368,7 +368,7 @@ resource "google_monitoring_dashboard" "default" {
 }
 
 data "google_monitoring_notification_channel" "default" {
-  display_name = "ALERT on workspace Lab v1"
+  display_name = var.notification_channel
 }
 
 resource "google_monitoring_alert_policy" "default" {
