@@ -21,7 +21,9 @@
  *
  * Before building the platform, you should build your own image for SSH and HTTP gateways with packer.
  *
- * Please refer to the documentation in the packer directory.
+ * Please refer to the documentation in the following repositories:
+ * [SSH](https://github.com/RaphaeldeGail/redesigned-bounce-image) and
+ * [HTTP](https://github.com/RaphaeldeGail/vigilant-envoy-image)
  *
  * Set the values of the required variables in terraform.tfvars and set the name of the images you built with packer in the main code.
  *
@@ -33,15 +35,6 @@
  * terraform init
  * terraform apply
  * ```
- *
- * ## Upcoming features
- *
- * - Improve variables definition and usage [X]
- * - Build a module to create multiple workstations []
- * - Improve image builds [X]
- * - Testing the platform [X]
- * - Improve workstation data disk mount [X]
- * - Add GCS Fuse to mount the GCS bucket to the workstation [X]
  *
  */
 
@@ -120,7 +113,9 @@ module "ssh_service" {
   port       = 22
   index      = 1
   // This is an image family
-  compute_image = "bounce-debian-11"
+  compute_image        = "bounce-debian-11"
+  dns_zone             = "lab-wansho-fr"
+  notification_channel = "ALERT on workspace Lab v1"
 
   back_network = {
     id              = google_compute_network.network.id
@@ -137,7 +132,9 @@ module "http_service" {
   port       = 443
   index      = 2
   // This is an image family
-  compute_image = "envoy-debian-11"
+  compute_image        = "envoy-debian-11"
+  dns_zone             = "lab-wansho-fr"
+  notification_channel = "ALERT on workspace Lab v1"
 
   back_network = {
     id              = google_compute_network.network.id
@@ -145,91 +142,11 @@ module "http_service" {
   }
 }
 
-resource "google_compute_disk" "boot_disk" {
-  name        = "workstation-boot-disk"
-  description = "Boot disk for the workstation"
+module "workstation" {
+  source = "./modules/workstation"
 
-  image                     = "ubuntu-2004-lts"
-  size                      = 10
-  type                      = "pd-standard"
-  physical_block_size_bytes = 4096
-  zone                      = "europe-west1-b"
-}
-
-resource "google_compute_resource_policy" "backup_policy" {
-  name = join("-", ["boot", "disk", "backup", "policy"])
-
-  region = var.workspace.region
-  snapshot_schedule_policy {
-    schedule {
-      daily_schedule {
-        days_in_cycle = 1
-        start_time    = "15:00"
-      }
-    }
-  }
-}
-
-resource "google_compute_disk_resource_policy_attachment" "backup_policy_attachment" {
-  name = google_compute_resource_policy.backup_policy.name
-  disk = google_compute_disk.boot_disk.name
-  zone = "europe-west1-b"
-}
-
-resource "google_service_account" "bucket_service_account" {
-  account_id   = "workstation-account"
-  description  = "Service account for the workstation"
-  display_name = "Workstation account"
-}
-
-resource "google_storage_bucket" "shared_bucket" {
-  name = "shared-bucket-1605"
-
-  location                    = "EU"
-  force_destroy               = true
-  storage_class               = "STANDARD"
-  uniform_bucket_level_access = true
-}
-
-resource "google_storage_bucket_iam_member" "shared_bucket_member" {
-  bucket = google_storage_bucket.shared_bucket.name
-  role   = "roles/storage.objectAdmin"
-  member = join(":", ["serviceAccount", google_service_account.bucket_service_account.email])
-}
-
-resource "google_compute_instance" "workstation" {
-  name        = "workstation"
-  description = "Workstation instance"
-
-  zone           = "europe-west1-b"
-  tags           = [var.workspace.name]
-  machine_type   = "e2-small"
-  can_ip_forward = false
-
-  service_account {
-    email  = google_service_account.bucket_service_account.email
-    scopes = ["cloud-platform"]
-  }
-
-  scheduling {
-    preemptible       = true
-    automatic_restart = false
-  }
-
-  boot_disk {
-    device_name = google_compute_disk.boot_disk.name
-    source      = google_compute_disk.boot_disk.id
-    auto_delete = false
-    mode        = "READ_WRITE"
-  }
-
-  network_interface {
-    subnetwork = google_compute_subnetwork.subnetwork.id
-  }
-
-  metadata = {
-    block-project-ssh-keys = true
-    ssh-keys               = join(":", [trimspace(var.user.name), trimspace(var.user.key)])
-    user-data              = file("cloud-config.yaml")
-  }
-}
+  username      = var.user.name
+  userkey       = var.user.key
+  workspacename = var.workspace.name
+  subnet_id     = google_compute_subnetwork.subnetwork.id
+} 

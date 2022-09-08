@@ -8,12 +8,12 @@ export TF_VAR_user="{ name=\"$USER\", key=\"$(cat /home/$USER/.ssh/id_rsa.pub)\"
 echo "*start: $(date)"
 
 # Uncomment below to clean code before verifications
-terraform fmt
+terraform fmt -recursive .
 terraform-docs .
 
 echo '*Terraform Format'
-if ! terraform fmt -check -list=false && terraform fmt -check -list=false ./modules/*/; then
-    terraform fmt -check -diff && terraform fmt -check ./modules/*/
+if ! terraform fmt -check -recursive -list=false .; then
+    terraform fmt -check -diff -recursive .
     exit 1
 fi
 echo '*OK (Terraform Format)'

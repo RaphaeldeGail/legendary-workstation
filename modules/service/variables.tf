@@ -53,3 +53,13 @@ variable "project_wide_ssh_keys" {
   default     = false
   description = "If true, the service instances will allow any SSH keys metadata set at the project level to be added."
 }
+
+variable "dns_zone" {
+  type        = string
+  description = "Name of the managed DNS zone used to create records for loadbalancers access."
+}
+
+variable "notification_channel" {
+  type        = string
+  description = "Displayed name of the notification channel used for alerts."
+}

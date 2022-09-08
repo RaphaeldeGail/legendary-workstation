@@ -21,7 +21,9 @@ The gateways are exposed behind Layer 4 loadbalancers.
 
 Before building the platform, you should build your own image for SSH and HTTP gateways with packer.
 
-Please refer to the documentation in the packer directory.
+Please refer to the documentation in the following repositories:
+[SSH](https://github.com/RaphaeldeGail/redesigned-bounce-image) and
+[HTTP](https://github.com/RaphaeldeGail/vigilant-envoy-image)
 
 Set the values of the required variables in terraform.tfvars and set the name of the images you built with packer in the main code.
 
@@ -33,15 +35,6 @@ Simply run:
 terraform init
 terraform apply
 ```
-
-## Upcoming features
-
-- Improve variables definition and usage [X]
-- Build a module to create multiple workstations []
-- Improve image builds [X]
-- Testing the platform [X]
-- Improve workstation data disk mount [X]
-- Add GCS Fuse to mount the GCS bucket to the workstation [X]
 
 ## Requirements
 
@@ -56,23 +49,17 @@ terraform apply
 |------|--------|---------|
 | http\_service | ./modules/service | n/a |
 | ssh\_service | ./modules/service | n/a |
+| workstation | ./modules/workstation | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [google_compute_disk.boot_disk](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk) | resource |
-| [google_compute_disk_resource_policy_attachment.backup_policy_attachment](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk_resource_policy_attachment) | resource |
-| [google_compute_instance.workstation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance) | resource |
 | [google_compute_network.network](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network) | resource |
-| [google_compute_resource_policy.backup_policy](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_resource_policy) | resource |
 | [google_compute_route.default_route](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_route) | resource |
 | [google_compute_router.default_router](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router) | resource |
 | [google_compute_router_nat.default_gateway](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_nat) | resource |
 | [google_compute_subnetwork.subnetwork](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
-| [google_service_account.bucket_service_account](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
-| [google_storage_bucket.shared_bucket](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket) | resource |
-| [google_storage_bucket_iam_member.shared_bucket_member](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_iam_member) | resource |
 
 ## Inputs
 

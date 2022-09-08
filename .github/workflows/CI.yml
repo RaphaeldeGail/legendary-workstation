@@ -24,7 +24,7 @@ jobs:
         run: terraform version
       - name: Check format of Terrraform files
         id: format
-        run: terraform fmt -check && terraform fmt -check ./modules/*/
+        run: terraform fmt -recursive -check .
   docs:
     runs-on: ubuntu-20.04
     container:

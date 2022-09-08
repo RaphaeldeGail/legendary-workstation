@@ -36,7 +36,7 @@ module "http_service" {
  }
 
  metadata       = {
-   user-data       = trimspace(templatefile("./envoy-config.tpl", {}))
+   user-data       = file("./envoy-config.tpl")
  }
 }
 ```
@@ -99,9 +99,11 @@ No modules.
 | back\_network | Workstation network characteristics. Including the google **id** of the network and the **base\_cidr\_block** for authorized ranges of IP addresses. | ```object({ id = string base_cidr_block = string })``` | n/a |
 | compute\_image | The compute image family to build instance from, for this service. | `string` | n/a |
 | desktop\_ip | Public IP address of the desktop to connect to the workstation. | `string` | n/a |
+| dns\_zone | Name of the managed DNS zone used to create records for loadbalancers access. | `string` | n/a |
 | index | A global index of the service which may not repeat itself among different instanciation. | `number` | n/a |
 | metadata | Metadata input for service instances. | `map(string)` | `{}` |
 | name | Name of the service. It may be the name of a protocol (HTTP) or any name. May only contains lowercase letters. | `string` | n/a |
+| notification\_channel | Displayed name of the notification channel used for alerts. | `string` | n/a |
 | port | Port number for service to expose. Should be related to the protocol (HTTP, SSH). | `number` | n/a |
 | project\_wide\_ssh\_keys | If true, the service instances will allow any SSH keys metadata set at the project level to be added. | `bool` | `false` |
 | service\_account | Email for the service account bound to the service. Defaults to null. | `string` | `null` |
