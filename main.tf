@@ -1,7 +1,7 @@
 /**
  * # Legendary Workstation
  * 
- * This code sets up a plateform for managing a development environment in Google Cloud, similar to a local environment (local virtual machine)
+ * This code sets up a plateform for managing a development environment in Google Cloud, similar to a local environment (local virtual machine).
  * 
  * ## Infrastructure description
  *
@@ -21,18 +21,20 @@
  *
  * Before building the platform, you should build your own image for SSH and HTTP gateways with packer.
  *
- * Please refer to the documentation in the packer directory.
+ * Please refer to the documentation in the following repositories:
+ * [SSH](https://github.com/RaphaeldeGail/redesigned-bounce-image) and
+ * [HTTP](https://github.com/RaphaeldeGail/vigilant-envoy-image)
  *
  * Set the values of the required variables in terraform.tfvars and set the name of the images you built with packer in the main code.
  *
  * Authenticate to Google Cloud Platform with a relevant account or set the environment variable *GOOGLE_APPLICATION_CREDENTIALS* to the path of a JSON service account key.
  *
- * Simply run terraform apply.
+ * Simply run:
  *
- * ## Upcoming features
- *
- * - Improve variables definition and usage
- * - Build a module to create multiple workstations
+ * ```bash
+ * terraform init
+ * terraform apply
+ * ```
  *
  */
 
@@ -50,8 +52,13 @@ terraform {
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  project = var.workspace.project
+  region  = var.workspace.region
+}
+
+locals {
+  // Default IP address range for the worksapce network
+  base_cidr_block = "10.1.0.0/27"
 }
 
 resource "google_compute_network" "network" {
@@ -68,7 +75,7 @@ resource "google_compute_subnetwork" "subnetwork" {
   description = "Subnetwork hosting workstation instances"
 
   network       = google_compute_network.network.id
-  ip_cidr_range = cidrsubnet(var.workspace.network.base_cidr_block, 2, 0)
+  ip_cidr_range = cidrsubnet(local.base_cidr_block, 2, 0)
 }
 
 resource "google_compute_route" "default_route" {
@@ -102,18 +109,17 @@ module "ssh_service" {
 
   name = "ssh"
 
-  desktop_ip    = var.workspace.network.desktop_ip
-  port          = 22
-  index         = 1
-  compute_image = "bounce-v1658674535-ubuntu-20"
+  desktop_ip = join("/", [var.user.ip, "32"])
+  port       = 22
+  index      = 1
+  // This is an image family
+  compute_image        = "bounce-debian-11"
+  dns_zone             = "lab-wansho-fr"
+  notification_channel = "ALERT on workspace Lab v1"
 
   back_network = {
     id              = google_compute_network.network.id
-    base_cidr_block = var.workspace.network.base_cidr_block
-  }
-
-  metadata = {
-    user-data = trimspace(templatefile("./bounce-config.tpl", { ssh_public = var.ssh_pub }))
+    base_cidr_block = local.base_cidr_block
   }
 }
 
@@ -122,108 +128,25 @@ module "http_service" {
 
   name = "http"
 
-  desktop_ip    = var.workspace.network.desktop_ip
-  port          = 443
-  index         = 2
-  compute_image = "envoy-v1659108720-ubuntu-20"
+  desktop_ip = join("/", [var.user.ip, "32"])
+  port       = 443
+  index      = 2
+  // This is an image family
+  compute_image        = "envoy-debian-11"
+  dns_zone             = "lab-wansho-fr"
+  notification_channel = "ALERT on workspace Lab v1"
 
   back_network = {
     id              = google_compute_network.network.id
-    base_cidr_block = var.workspace.network.base_cidr_block
-  }
-
-  metadata = {
-    user-data = trimspace(templatefile("./envoy-config.tpl", {}))
+    base_cidr_block = local.base_cidr_block
   }
 }
 
-resource "google_compute_disk" "data_disk" {
-  name        = "workstation-data-disk"
-  description = "Supplementary data disk for the workstation"
+module "workstation" {
+  source = "./modules/workstation"
 
-  size                      = 10
-  type                      = "pd-standard"
-  physical_block_size_bytes = 4096
-  zone                      = "europe-west1-b"
-}
-
-resource "google_compute_resource_policy" "backup_policy" {
-  name = join("-", ["data", "disk", "backup", "policy"])
-
-  region = var.region
-  snapshot_schedule_policy {
-    schedule {
-      daily_schedule {
-        days_in_cycle = 1
-        start_time    = "15:00"
-      }
-    }
-  }
-}
-
-resource "google_compute_disk_resource_policy_attachment" "backup_policy_attachment" {
-  name = google_compute_resource_policy.backup_policy.name
-  disk = google_compute_disk.data_disk.name
-  zone = "europe-west1-b"
-}
-
-resource "google_service_account" "bucket_service_account" {
-  account_id   = "workstation-account"
-  description  = "Service account for the workstation"
-  display_name = "Workstation account"
-}
-
-resource "google_storage_bucket" "shared_bucket" {
-  name = "shared-bucket-1605"
-
-  location                    = "EU"
-  force_destroy               = true
-  storage_class               = "STANDARD"
-  uniform_bucket_level_access = true
-}
-
-resource "google_storage_bucket_iam_member" "shared_bucket_member" {
-  bucket = google_storage_bucket.shared_bucket.name
-  role   = "roles/storage.objectAdmin"
-  member = join(":", ["serviceAccount", google_service_account.bucket_service_account.email])
-}
-
-resource "google_compute_instance" "workstation" {
-  name        = "workstation"
-  description = "Workstation instance"
-
-  zone           = "europe-west1-b"
-  tags           = [var.workspace.name]
-  machine_type   = "e2-small"
-  can_ip_forward = false
-
-  scheduling {
-    preemptible       = true
-    automatic_restart = false
-  }
-
-  boot_disk {
-    initialize_params {
-      image = "ubuntu-2004-lts"
-      size  = 10
-    }
-    auto_delete = true
-  }
-
-  attached_disk {
-    source      = google_compute_disk.data_disk.id
-    device_name = "data-disk"
-    mode        = "READ_WRITE"
-  }
-
-  network_interface {
-    subnetwork = google_compute_subnetwork.subnetwork.id
-  }
-
-  metadata = {
-    startup-script         = "mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb; mkdir -p /mnt/disks/diskb; mount -o discard,defaults /dev/sdb /mnt/disks/diskb; chmod a+w /mnt/disks/diskb; echo '/dev/sdb /mnt/disks/diskb ext4 discard,defaults,rw 0 2' >> /etc/fstab"
-    block-project-ssh-keys = true
-    ssh-keys               = join(":", ["raphael", trimspace(var.ssh_pub)])
-  }
-
-}
+  username      = var.user.name
+  userkey       = var.user.key
+  workspacename = var.workspace.name
+  subnet_id     = google_compute_subnetwork.subnetwork.id
+} 

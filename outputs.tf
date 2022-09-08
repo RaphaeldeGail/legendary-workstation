@@ -1,8 +1,7 @@
-output "network" {
+output "access_hosts" {
   value = {
-    name            = google_compute_network.network.name
-    base_cidr_block = var.workspace.network.base_cidr_block
-    id              = google_compute_network.network.id
+    ssh  = module.ssh_service.external_lb_name,
+    http = module.http_service.external_lb_name
   }
-  description = "Main network characteristics"
+  description = "FQDN to access each service exposed for the workstation."
 }

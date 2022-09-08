@@ -1,27 +1,32 @@
-variable "project_id" {
-  type        = string
-  description = "ID of the project."
-  nullable    = false
-}
-
-variable "region" {
-  type        = string
-  description = "Geographical *region* for Google Cloud Platform."
-  nullable    = false
-}
-
 variable "workspace" {
   type = object({
-    name = string
-    network = object({
-      base_cidr_block = string
-      desktop_ip      = string
-    })
+    name    = string
+    project = string
+    region  = string
   })
-  description = "Core unit of the workstation environment"
+  description = "The workspace that will be created on GCP. Requires a **name**, the ID of a GCP **project** and the **region** of deployment on GCP. The **name** attributes must contain only lowercase letters."
+
+  validation {
+    condition     = can(regex("^[a-z]*$", var.workspace.name))
+    error_message = "The workspace name should be a valid name with only lowercase letters allowed."
+  }
 }
 
-variable "ssh_pub" {
-  type        = string
-  description = "User public key for SSH authentication. Confidential, should only be set by environment variable *TF_VAR_ssh_pub*"
+variable "user" {
+  type = object({
+    name = string
+    key  = string
+    ip   = string
+  })
+  description = "The user who will have access to the workstation. Requires a **name**, the content of a public **key** for SSH authentication and the public IP address of the user.\n The **name** attribute must follow UNIX name standards. the SSH public **key** should be one line and the *ip* attribute should be in the form *X.X.X.X* as standard IPv4."
+  sensitive   = true
+
+  validation {
+    condition     = can(regex("^[a-z][-a-z0-9]*$", var.user.name))
+    error_message = "The user name should comply with UNIX standards and the NAME_REGEX \"^[a-z][-a-z0-9]*$\"."
+  }
+  validation {
+    condition     = can(regex("^([0-9]){1,3}.([0-9]){1,3}.([0-9]){1,3}.([0-9]){1,3}$", var.user.ip))
+    error_message = "The user IP address should be in the form *X.X.X.X*, with X a number between 0 and 255 as standard IPv4."
+  }
 }
