@@ -70,9 +70,12 @@ resource "google_compute_resource_policy" "backup_policy" {
   snapshot_schedule_policy {
     schedule {
       daily_schedule {
-        days_in_cycle = 1
+        days_in_cycle = 7
         start_time    = "19:00"
       }
+    }
+    retention_policy {
+      max_retention_days = 15
     }
   }
 }

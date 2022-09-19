@@ -14,7 +14,7 @@ fi
 echo '*OK (Terraform Validate)'
 
 echo '*Terraform Plan'
-if ! terraform plan -json -destroy -no-color -out plan.out | jq -r '. | select(.type == "diagnostic" or .type == "change_summary" or .type == "planned_change")["@message"]'; then
+if ! terraform plan -json -destroy -no-color -out plan.out -target 'module.ssh_service' -target 'module.http_service' -target 'google_compute_router_nat.default_gateway' | jq -r '. | select(.type == "diagnostic" or .type == "change_summary" or .type == "planned_change")["@message"]'; then
     exit 1
 fi
 echo '*OK (Terraform Plan)'
